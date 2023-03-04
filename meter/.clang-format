@@ -5,7 +5,7 @@ AllowAllArgumentsOnNextLine: true
 AllowAllConstructorInitializersOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortFunctionsOnASingleLine: All
-AllowShortIfStatementsOnASingleLine: Never
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: MultiLine
@@ -18,8 +18,8 @@ BreakBeforeBraces: Allman
 AlignAfterOpenBracket: Align
 CompactNamespaces: false
 BreakBeforeTernaryOperators: false
-#BreakConstructorInitializersBeforeComma: false
-BreakConstructorInitializers: BeforeColon
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: AfterColon
 AllowShortBlocksOnASingleLine: Always
 ColumnLimit: 100
 CommentPragmas: ''
@@ -54,3 +54,7 @@ SpacesInParentheses: false
 Standard: c++17
 TabWidth: 4
 UseTab: Never
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
