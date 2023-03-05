@@ -6,18 +6,27 @@ const char *emergencyTypeToStr(EmergencyType t)
     {
     case EmergencyType::None:
         return "None";
-        break;
     case EmergencyType::UnknownError:
         return "UnknownError";
-        break;
     case EmergencyType::HaltOnUnrecoverableError:
         return "HaltOnUnrecoverableError";
-        break;
     case EmergencyType::HaltOnUnrecoverableStorageError:
         return "HaltOnUnrecoverableStorageError";
-        break;
+    case EmergencyType::HaltOnUnrecoverableProbeError:
+        return "HaltOnUnrecoverableProbeError";
     default:
         return "-";
-        break;
+    }
+}
+const char *operatingModeTypeToStr(OperatingModeType t)
+{
+    switch(t)
+    {
+    case OperatingModeType::Measure:
+        return "Measure";
+    case OperatingModeType::Idle:
+        return "Idle";
+    default:
+        return "-";
     }
 }

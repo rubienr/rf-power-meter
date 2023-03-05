@@ -4,13 +4,8 @@
 #include <U8x8lib.h>
 
 
-UiRenderer::UiRenderer(UiData &uiData,
-                       OperatingState &operatingState,
-                       SettingsStorage<EepromStorageDevice<Settings>> &settings,
-                       U8X8 &outDisplay,
-                       Stream &outSerial) :
-data(uiData),
-operatingState(operatingState), settings(settings), display(outDisplay), serial(outSerial)
+UiRenderer::UiRenderer(UiData &uiData, OperatingState &operatingState, SettingsStorage<EepromStorageDevice<Settings>> &settings, U8X8 &outDisplay, Stream &outSerial) :
+data(uiData), operatingState(operatingState), settings(settings), display(outDisplay), serial(outSerial)
 {
 }
 
@@ -18,7 +13,7 @@ void UiRenderer::render()
 {
     if(operatingState.emergency != EmergencyType::None)
     {
-        serial.print("# EmergencyType=");
+        serial.print("#W EmergencyType=");
         serial.println(emergencyTypeToStr(operatingState.emergency));
     }
 }

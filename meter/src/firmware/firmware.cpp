@@ -1,6 +1,5 @@
 #include "firmware.h"
 #include "../../lib/settings/log.hpp"
-#include "../../lib/storage/SettingsStorage.hpp"
 
 void Firmware::setup()
 {
@@ -12,9 +11,11 @@ void Firmware::setup()
     Serial.print(VERSION_MINOR);
     Serial.print('.');
     Serial.print(VERSION_PATCH);
-    Serial.print(F(" built "));;
+    Serial.print(F(" built "));
+    ;
     Serial.print(__DATE__);
-    Serial.print(F(" "));;
+    Serial.print(F(" "));
+    ;
     Serial.print(__TIME__);
     Serial.println();
 
@@ -36,8 +37,7 @@ void Firmware::setup()
 
     auto loadSettingsState = settingsStorage.loadOrInit(settings);
     logLoadSettings(loadSettingsState);
-    if(loadSettingsState.fatal_error)
-        operatingState.emergency = EmergencyType::HaltOnUnrecoverableStorageError;
+    if(loadSettingsState.fatal_error) operatingState.emergency = EmergencyType::HaltOnUnrecoverableStorageError;
     else
     {
         Serial.println(F("{\n  \"settings\" : {"));
@@ -50,21 +50,16 @@ void Firmware::setup()
 
 void Firmware::logLoadSettings(const StorageLoadResult &result)
 {
-    if(result.loaded_crc_mismatch == 1)
-        Serial.println(F("#E loaded settings from EEPROM: CRC mismatch"));
-    if(result.loaded_version_mismatch == 1)
-        Serial.println(F("#W loaded settings from EEPROM: version mismatch"));
+    if(result.loaded_crc_mismatch == 1) Serial.println(F("#E loaded settings from EEPROM: CRC mismatch"));
+    if(result.loaded_version_mismatch == 1) Serial.println(F("#W loaded settings from EEPROM: version mismatch"));
 
     if(result.stored_defaults == 1) Serial.println(F("#D defaults stored"));
     if(result.loaded_defaults == 1) Serial.println(F("#D reloaded defaults"));
 
-    if(result.loaded_crc_mismatch_after_storing_defaults == 1)
-        Serial.println(F("#E failed to load settings from EEPROM: CRC mismatch"));
-    if(result.loaded_version_mismatch_after_storing_defaults == 1)
-        Serial.println(F("#E failed to load settings from EEPROM: version mismatch"));
+    if(result.loaded_crc_mismatch_after_storing_defaults == 1) Serial.println(F("#E failed to load settings from EEPROM: CRC mismatch"));
+    if(result.loaded_version_mismatch_after_storing_defaults == 1) Serial.println(F("#E failed to load settings from EEPROM: version mismatch"));
 
-    if(result.fatal_error == 1)
-        Serial.println(F("#F fatal error while loading settings; EEPROM defect?"));
+    if(result.fatal_error == 1) Serial.println(F("#F fatal error while loading settings; EEPROM defect?"));
     else Serial.println(F("#I settings loaded successfully from EEPROM"));
 }
 
@@ -81,12 +76,12 @@ void Firmware::process()
 
     switch(operatingState.mode)
     {
-    case OperatingMode::Measure:
+    case OperatingModeType::Measure:
         if(isSampleTimeout()) { doSample(); }
         if(isRenderTimeout()) { doRender(); }
         break;
 
-    case OperatingMode::Idle:
+    case OperatingModeType::Idle:
         if(isRenderTimeout()) { doRender(); }
         break;
 
@@ -96,7 +91,42 @@ void Firmware::process()
     }
 }
 
-void Firmware::doSample() { sampleTimer = 0; }
+void Firmware::doSample()
+{
+    static uint8_t subsequentReadErrors{ 0 };
+    static uint8_t subsequentZeroSamples{ 0 };
+    if(!rfProbe.readSample(rfSampleRegister))
+    {
+        subsequentReadErrors++;
+        if(subsequentReadErrors > AD7887_SUBSEQUENT_READ_ERRORS)
+        {
+            Serial.print(F("#F "));
+            operatingState.emergency = EmergencyType::HaltOnUnrecoverableProbeError;
+        }
+        else { Serial.print(F("#W ")); }
+        Serial.print(F("failed to read from probe ("));
+        Serial.print(subsequentReadErrors);
+        Serial.println(F(")"));
+    }
+    else { subsequentReadErrors = 0; }
+
+    if(rfSampleRegister.data == 0)
+    {
+        subsequentZeroSamples++;
+        if(subsequentZeroSamples > AD7887_SUBSEQUENT_ZERO_SAMPLES)
+        {
+            Serial.print(F("#F "));
+            operatingState.emergency = EmergencyType::HaltOnUnrecoverableProbeError;
+        }
+        else { Serial.print(F("#W ")); }
+        Serial.print(F("failed to read from probe: too many zero-samples ("));
+        Serial.print(subsequentZeroSamples);
+        Serial.println(F(")"));
+    }
+    else { subsequentZeroSamples = 0; }
+
+    sampleTimer = 0;
+}
 
 void Firmware::doRender()
 {
@@ -111,12 +141,16 @@ void Firmware::doRender()
     display.print(isOn ? '+' : ' ');
     display.display();
     Serial.print('.');
+
     renderTimer = 0;
 }
 
 [[noreturn]] void Firmware::doHalt()
 {
     renderer.render();
+    Serial.print(R"("{ EmergencyType" : ")");
+    Serial.print(emergencyTypeToStr(operatingState.emergency));
+    Serial.println("\" }");
     for(;;) {}
 }
 
