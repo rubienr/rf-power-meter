@@ -18,7 +18,7 @@ struct Stream
 
 template <const char *ident> struct _LogSettings
 {
-    _LogSettings(Stream &outStream) : out(outStream) {}
+    explicit _LogSettings(Stream &outStream) : out(outStream) {}
 
     void printIdent(uint8_t identSteps)
     {
