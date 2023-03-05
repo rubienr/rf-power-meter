@@ -1,9 +1,8 @@
 #include "UiRendererU8x8.h"
-#include "../../lib/settings/Settings.h"
 #include "UiData.h"
 #include "states/OperatingState.h"
-#include <HardwareSerial.h>
-#include <U8g2lib.h>
+#include <U8x8lib.h>
+
 
 UiRenderer::UiRenderer(UiData &uiData,
                        OperatingState &operatingState,
@@ -19,7 +18,7 @@ void UiRenderer::render()
 {
     if(operatingState.emergency != EmergencyType::None)
     {
-        Serial.print("# EmergencyType=");
-        Serial.println(emergencyTypeToStr(operatingState.emergency));
+        serial.print("# EmergencyType=");
+        serial.println(emergencyTypeToStr(operatingState.emergency));
     }
 }

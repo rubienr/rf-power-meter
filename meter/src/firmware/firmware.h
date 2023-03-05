@@ -11,7 +11,10 @@ protected:
     void doRender();
     [[noreturn]] void doHalt();
 
+    static void logLoadSettings(const StorageLoadResult &result);
+
     bool toggleActivityLed();
     bool isSampleTimeout();
+
     bool isRenderTimeout();
 };

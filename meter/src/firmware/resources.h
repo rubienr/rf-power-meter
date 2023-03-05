@@ -1,6 +1,4 @@
 #pragma once
-#include <U8x8lib.h>
-// #include "U8g2lib.h"
 #include "../../lib/settings/Settings.h"
 #include "../lib/storage/EepromStorageDevice.hpp"
 #include "../lib/storage/SettingsStorage.hpp"
@@ -10,6 +8,7 @@
 #include "ui/UiRendererU8x8.h"
 #include <Arduino.h>
 #include <HardwareSerial.h>
+#include <U8x8lib.h>
 
 struct Resources
 {
@@ -23,9 +22,7 @@ struct Resources
                 delay(10);
                 Serial.begin(115200, SERIAL_8N1);
             }
-
-            Serial.println(F("\n\n\n"));
-            Serial.println(F("early init: done"));
+            Serial.println(F("\n#D early init: done"));
         }
     } _{};
 

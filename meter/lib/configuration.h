@@ -16,7 +16,7 @@
 #define RENDER_TIMER_MS_MIN     100
 
 // ----- section: periphery
-#define ACTIVITY_LED            LED_BUILTIN // enables LED blinking on each render loop; disable in production
+// #define ACTIVITY_LED         LED_BUILTIN // enables LED blinking on each render loop; disable in production
 
 // ----- section: storage
-#define EEPROM_START_ADDRESS    0x0 // change if EEPROM is broken to avoid damaged sements
+#define EEPROM_START_ADDRESS    0x0 // change if EEPROM is broken to avoid damaged segments

@@ -61,4 +61,4 @@ jobs:
     - name: Build targets
       run: |
         cd meter
-        platformio run --environment native --environment arduino_uno
+        platformio run --environment arduino_uno

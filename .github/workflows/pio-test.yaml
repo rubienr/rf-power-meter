@@ -61,5 +61,5 @@ jobs:
     - name: Unit tests
       run: |
         cd meter
-        platformio test --environment native
+        platformio test --environment test_native
 

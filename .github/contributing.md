@@ -24,8 +24,8 @@ The procedure:
 1. make code changes
 2. stage files
 3. git commit
-   1. pre-commit check succeedes -> commit is done
-   2. pre-commit check fails -> commit is interrupted
+   1. if pre-commit check succeedes -> commit is done
+   2. if pre-commit check fails -> commit is interrupted
       1. files are changed and unstaged
       2. review changes, stage files and repeat the commit command
 
@@ -38,11 +38,9 @@ stick to the same pattern as the majority of the code does.
 
 # Testing
 
-- Prefer unit tests over integration tests.
 - For each PR tests must exist that prove the changes.
 - Old tests must be updated if they fail.
-- Prior a PR run unit tests on as many platforms you are able to
-(native, atmelavr, ststm, espressif, ...).
+- Prior a PR run unit tests on as many platforms you are able to (see environments starting with `test_`).
 
 
 # Quality
@@ -53,3 +51,4 @@ stick to the same pattern as the majority of the code does.
 - Perform a self-review, comment code in public interface
 and in hard-to-understand areas.
 - Update the documentation accordingly.
+

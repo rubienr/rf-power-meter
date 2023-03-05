@@ -45,13 +45,13 @@ public:
         loadedSettings.render.separation_ms = 91;
 
         load(loadedSettings);
-        result.loaded = true;
         if(loadedSettings.checkCrc())
         {
             // OK: CRC okay and version as expected
             if(loadedSettings.device.version == defaultSettings.device.version)
             {
                 defaultSettings = loadedSettings;
+                result.loaded = true;
                 return result;
             }
             // OK: CRC okay but version not as expected -> store default values
@@ -73,12 +73,12 @@ public:
         load(loadedSettings);
         result.loaded_defaults = true;
 
-
         if(loadedSettings.checkCrc())
         { // OK: CRC check passed after default settings have been re-stored with default valued
             if(loadedSettings.device.version == defaultSettings.device.version)
             { // OK: version check passed
                 defaultSettings = loadedSettings;
+                result.loaded = true;
                 return result;
             }
             else
@@ -108,32 +108,25 @@ public:
      * @return false if error handling is not possible, true (regardless of error handling attempts)
      * if loaded CRC is valid and the loaded version matches the expected version
      */
-
-    StorageStoreResult storeOrInit(Settings &defaultSettings)
+    StorageStoreResult storeAndCheck(Settings &defaultSettings)
     {
         StorageStoreResult result;
         Settings loadedSettings;
 
         store(defaultSettings);
-        result.stored = true;
-
         load(loadedSettings);
-        result.loaded = true;
-
 
         if(loadedSettings.checkCrc())
         { // OK: CRC check passed
 
-            if(defaultSettings.device.version == loadedSettings.device.version)
+            if(defaultSettings == loadedSettings)
             {
-                // OK: version check passed
+                result.stored = true;
                 return result;
             }
             else
             {
-                // FATAL ERROR, version check failed: most likely EEPROM segments broken
-                // Note: try to manually update EEPROM_START_ADDRESS to mitigate this issue.
-                result.loaded_version_mismatch_after_storing = true;
+                // WTF (what a terrible failure)!
                 result.fatal_error = true;
                 return result;
             }

@@ -9,7 +9,7 @@
 #include <unity.h>
 
 
-struct DummyConstStorageDeviceCrcOk
+struct DummyConstLoadStorageDeviceCrcOk
 {
     Settings &get(int, Settings &t) const
     {
@@ -20,7 +20,7 @@ struct DummyConstStorageDeviceCrcOk
     const Settings &put(int, const Settings &t) { return t; }
 };
 
-struct DummyConstStorageDeviceCrcFail
+struct DummyConstLoadStorageDeviceCrcFail
 {
     Settings &get(int, Settings &t) const
     {
@@ -31,7 +31,7 @@ struct DummyConstStorageDeviceCrcFail
     const Settings &put(int, const Settings &t) { return t; }
 };
 
-struct DummyConstStorageDeviceVersionMismatch
+struct DummyConstLoadStorageDeviceVersionMismatch
 {
     Settings &get(int, Settings &t) const
     {
@@ -42,10 +42,62 @@ struct DummyConstStorageDeviceVersionMismatch
     const Settings &put(int, const Settings &t) { return t; }
 };
 
-using DummySettingsStorage = SettingsStorage<DummyStorageDevice<Settings>>;
-using DummySettingsConstStorageCrcOk = SettingsStorage<DummyConstStorageDeviceCrcOk>;
-using DummySettingsConstStorageCrcFail = SettingsStorage<DummyConstStorageDeviceCrcFail>;
-using DummySettingsConstStorageVersionMismatch = SettingsStorage<DummyConstStorageDeviceVersionMismatch>;
+struct DummyStoreStorageDevice
+{
+    Settings s;
+    Settings &get(int, Settings &t) const
+    {
+        t = s;
+        return t;
+    }
+    const Settings &put(int, const Settings &t)
+    {
+        s = t;
+        return t;
+    }
+};
+
+struct DummyStoreStorageDeviceCrcFail
+{
+    Settings s;
+    Settings &get(int, Settings &t) const
+    {
+        t = s;
+        return t;
+    }
+    const Settings &put(int, const Settings &t)
+    {
+        s = t;
+        s.crc++;
+        return t;
+    }
+};
+
+struct DummyStoreStorageDevicePayloadMismatch
+{
+    Settings s;
+    Settings &get(int, Settings &t) const
+    {
+        t = s;
+        return t;
+    }
+    const Settings &put(int, const Settings &t)
+    {
+        s = t;
+        s.device.version.patch++;
+        s.updateCrc();
+        return t;
+    }
+};
+
+using DummySettingsLoadStorage = SettingsStorage<DummyStorageDevice<Settings>>;
+using DummySettingsLoadConstStorageCrcOk = SettingsStorage<DummyConstLoadStorageDeviceCrcOk>;
+using DummySettingsLoadConstStorageCrcFail = SettingsStorage<DummyConstLoadStorageDeviceCrcFail>;
+using DummySettingsLoadConstStorageVersionMismatch = SettingsStorage<DummyConstLoadStorageDeviceVersionMismatch>;
+
+using DummySettingsStoreStorage = SettingsStorage<DummyStoreStorageDevice>;
+using DummySettingsStoreStorageCrcFail = SettingsStorage<DummyStoreStorageDeviceCrcFail>;
+using DummySettingsStoreStoragePayloadMismatch = SettingsStorage<DummyStoreStorageDevicePayloadMismatch>;
 
 void test_compute_and_check_crc_01()
 {
@@ -64,7 +116,7 @@ void test_compute_and_check_crc_02()
 
 void test_load()
 {
-    DummySettingsStorage storage;
+    DummySettingsLoadStorage storage;
     Settings a, b;
     a.sample.separation_ms = 100;
     b.sample.separation_ms = 100;
@@ -74,15 +126,15 @@ void test_load()
 
 void test_store()
 {
-    DummySettingsStorage storage;
+    DummySettingsLoadStorage storage;
     Settings a, b;
     a.sample.separation_ms = 100;
-    b.sample.separation_ms = 100;
+    b = a;
 
-    storage.store(b);
+    storage.store(a);
 
-    a.device.configWrites++;
-    a.updateCrc();
+    b.device.configWrites++;
+    b.updateCrc();
 
     TEST_ASSERT(a == b);
 }
@@ -91,14 +143,12 @@ void test_load_or_init_crc_ok()
 {
     Settings a;
     a.sample.separation_ms = 123;
-    a.updateCrc();
 
-    DummySettingsConstStorageCrcOk storage;
+    DummySettingsLoadConstStorageCrcOk storage;
     StorageLoadResult result = storage.loadOrInit(a);
 
     TEST_ASSERT_EQUAL(100, a.sample.separation_ms.get());
     TEST_ASSERT_EQUAL(1, result.loaded);
-    TEST_ASSERT_EQUAL(0, result.stored);
     TEST_ASSERT_EQUAL(0, result.stored_defaults);
     TEST_ASSERT_EQUAL(0, result.loaded_defaults);
     TEST_ASSERT_EQUAL(0, result.loaded_crc_mismatch);
@@ -112,14 +162,12 @@ void test_load_or_init_crc_fail()
 {
     Settings a;
     a.sample.separation_ms = 123;
-    a.updateCrc();
 
-    DummySettingsConstStorageCrcFail storage;
+    DummySettingsLoadConstStorageCrcFail storage;
     auto result = storage.loadOrInit(a);
 
     TEST_ASSERT_EQUAL(123, a.sample.separation_ms.get());
-    TEST_ASSERT_EQUAL(1, result.loaded);
-    TEST_ASSERT_EQUAL(0, result.stored);
+    TEST_ASSERT_EQUAL(0, result.loaded);
     TEST_ASSERT_EQUAL(1, result.stored_defaults);
     TEST_ASSERT_EQUAL(1, result.loaded_defaults);
     TEST_ASSERT_EQUAL(1, result.loaded_crc_mismatch);
@@ -133,22 +181,65 @@ void test_load_or_init_version_mismatch()
 {
     Settings a;
     a.sample.separation_ms = 123;
-    a.updateCrc();
     uint16_t patchVersion{ a.device.version.patch };
 
-    DummySettingsConstStorageVersionMismatch storage;
+    DummySettingsLoadConstStorageVersionMismatch storage;
     auto result = storage.loadOrInit(a);
 
     TEST_ASSERT_EQUAL(123, a.sample.separation_ms.get());
     TEST_ASSERT_EQUAL(patchVersion, a.device.version.patch);
-    TEST_ASSERT_EQUAL(1, result.loaded);
-    TEST_ASSERT_EQUAL(0, result.stored);
+    TEST_ASSERT_EQUAL(0, result.loaded);
     TEST_ASSERT_EQUAL(1, result.stored_defaults);
     TEST_ASSERT_EQUAL(1, result.loaded_defaults);
-    TEST_ASSERT_EQUAL(0, result.loaded_crc_mismatch); //
+    TEST_ASSERT_EQUAL(0, result.loaded_crc_mismatch);
     TEST_ASSERT_EQUAL(1, result.loaded_version_mismatch);
     TEST_ASSERT_EQUAL(0, result.loaded_crc_mismatch_after_storing_defaults);
     TEST_ASSERT_EQUAL(1, result.loaded_version_mismatch_after_storing_defaults);
+    TEST_ASSERT_EQUAL(1, result.fatal_error);
+}
+
+void test_store_or_init_ok()
+{
+    Settings a;
+    a.sample.separation_ms = 123;
+    a.device.configWrites = 42;
+
+    DummySettingsStoreStorage storage;
+    auto result = storage.storeAndCheck(a);
+
+    TEST_ASSERT_EQUAL(43, a.device.configWrites);
+    TEST_ASSERT_EQUAL(1, result.stored);
+    TEST_ASSERT_EQUAL(0, result.loaded_crc_mismatch_after_storing);
+    TEST_ASSERT_EQUAL(0, result.fatal_error);
+}
+
+void test_store_or_init_crc_fail()
+{
+    Settings a;
+    a.sample.separation_ms = 123;
+    a.device.configWrites = 42;
+
+    DummySettingsStoreStorageCrcFail storage;
+    auto result = storage.storeAndCheck(a);
+
+    TEST_ASSERT_EQUAL(43, a.device.configWrites);
+    TEST_ASSERT_EQUAL(0, result.stored);
+    TEST_ASSERT_EQUAL(1, result.loaded_crc_mismatch_after_storing);
+    TEST_ASSERT_EQUAL(1, result.fatal_error);
+}
+
+void test_store_or_init_payload_mismatch()
+{
+    Settings a;
+    a.sample.separation_ms = 123;
+    a.device.configWrites = 42;
+
+    DummySettingsStoreStoragePayloadMismatch storage;
+    auto result = storage.storeAndCheck(a);
+
+    TEST_ASSERT_EQUAL(43, a.device.configWrites);
+    TEST_ASSERT_EQUAL(0, result.stored);
+    TEST_ASSERT_EQUAL(0, result.loaded_crc_mismatch_after_storing);
     TEST_ASSERT_EQUAL(1, result.fatal_error);
 }
 
@@ -162,6 +253,9 @@ int tests()
     RUN_TEST(test_load_or_init_crc_ok);
     RUN_TEST(test_load_or_init_crc_fail);
     RUN_TEST(test_load_or_init_version_mismatch);
+    RUN_TEST(test_store_or_init_ok);
+    RUN_TEST(test_store_or_init_crc_fail);
+    RUN_TEST(test_store_or_init_payload_mismatch);
     return UNITY_END();
 }
 

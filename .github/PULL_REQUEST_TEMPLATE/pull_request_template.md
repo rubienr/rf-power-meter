@@ -26,7 +26,7 @@ TODO
 <!-- List old and new tests that verifies your changes or delete this section if not applicable. -->
 - Test A
 - Test B (new test)
-- `pio test -e xxx -f yyy` <!-- with `fff` being a filter pattern -->
+- `pio test --environment test_xxx --filter fff` <!-- with `fff` being a filter pattern, example `pio test -e test_arduino -f test_crc` -->
 - ...
 - Test N
 
@@ -46,11 +46,7 @@ TODO
 **Testing**
 - unit tests:
   - [ ] in GitHub CI: triggered on commit
-  - [ ] on your machine: `pio test -e native`
-  - [ ] `pio test -e megaatmega2560` <!-- test at least with one controller; prefer as many as possible -->
-  - [ ] `pio test -e ststm32`
-  - [ ] `pio test -e espressif8266`
-  - [ ] `pio test -e espressif32`
-- integration tests:
-  - [ ] in GitHub CI: triggered on commit
-  - [ ] on your machine: `pio run -e native -t integration`
+  - [ ] on your machine: `pio test --environment test_native`
+  - [ ] `pio test --environment test_arduino_uno` <!-- test at least with one controller; prefer as many as possible -->
+<!-- - [ ] `pio test -e test_ststm32` // if applicable: other devices that have been tested with-->
+

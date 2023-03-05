@@ -1,5 +1,4 @@
 #include "OperatingState.h"
-#include "WString.h"
 
 const char *emergencyTypeToStr(EmergencyType t)
 {
