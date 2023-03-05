@@ -201,7 +201,7 @@ void Firmware::doRender()
 
     Settings defaultSettings;
     defaultSettings.device.configWrites = settings.parameters.device.configWrites;
-    auto result = settings.storage.storeAndCheck(settings.parameters);
+    auto result = settings.storage.storeAndCheck(defaultSettings);
     logStoreSettings(result);
     Serial.flush();
     delay(100);
