@@ -21,6 +21,9 @@ struct DeviceInfo
 
     Version version;
     uint32_t configWrites{ 0 };
+#if defined(AUTO_POWER_OFF_FEATURE)
+    uint16_t autoPowerOffSeconds{AUTO_POWER_OFF_SEC};
+#endif
 } __attribute__((__packed__));
 
 struct Sample

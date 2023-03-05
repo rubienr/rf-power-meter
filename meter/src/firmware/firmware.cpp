@@ -1,10 +1,20 @@
 #include "firmware.h"
 #include "../../lib/settings/log.hpp"
 
+void (*reboot)(void) = 0;
+
 void Firmware::setup()
 {
     EarlyInitializer _{}; // TODO: this is 2nd attempt; 1st attempt does not initialize correctly
+    operatingState.switchMode(OperatingModeType::Setup);
     Serial.println(F("#D setup ..."));
+
+#if defined(POWER_OFF_FEATURE)
+    pinMode(POWER_OFF_SENSE_PIN, POWER_OFF_SENSE_PIN_TRIGGER_LEVEL == HIGH ? INPUT : INPUT_PULLUP);
+    pinMode(POWER_OFF_PIN, OUTPUT);
+    digitalWrite(POWER_OFF_PIN, POWER_OFF_PIN_ACTIVE == HIGH ? LOW : HIGH);
+#endif
+
     Serial.print(F("#I RF Meter Version "));
     Serial.print(VERSION_MAJOR);
     Serial.print('.');
@@ -26,7 +36,7 @@ void Firmware::setup()
 
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, 0);
-#ifdef ACTIVITY_LED
+#if defined(ACTIVITY_LED)
     pinMode(ACTIVITY_LED, OUTPUT);
 #endif
 
@@ -35,56 +45,91 @@ void Firmware::setup()
     display.setFont(u8x8_font_chroma48medium8_r);
     display.clear();
 
-    auto loadSettingsState = settingsStorage.loadOrInit(settings);
+    auto loadSettingsState = settings.storage.loadOrInit(settings.parameters);
     logLoadSettings(loadSettingsState);
-    if(loadSettingsState.fatal_error) operatingState.emergency = EmergencyType::HaltOnUnrecoverableStorageError;
+    if(loadSettingsState.fatal_error) operatingState.setEmergency(EmergencyType::HaltOnUnrecoverableStorageError);
     else
     {
         Serial.println(F("{\n  \"settings\" : {"));
         LogSettings logger(Serial);
-        logger.log(settings, 2);
+        logger.log(settings.parameters, 2);
         Serial.println(F("  }\n}"));
     }
-    Serial.println(F("#D setup: done"));
+
+
+#if defined(EEPROM_RESET_PIN_FEATURE)
+    pinMode(EEPROM_RESET_PIN, EEPROM_RESET_PIN_TRIGGER_LEVEL == HIGH ? INPUT : INPUT_PULLUP);
+#endif
+    operatingState.switchMode(OperatingModeType::Operational);
 }
 
 void Firmware::logLoadSettings(const StorageLoadResult &result)
 {
-    if(result.loaded_crc_mismatch == 1) Serial.println(F("#E loaded settings from EEPROM: CRC mismatch"));
+    if(result.loaded_crc_mismatch == 1) Serial.println(F("#W loaded settings from EEPROM: CRC mismatch"));
     if(result.loaded_version_mismatch == 1) Serial.println(F("#W loaded settings from EEPROM: version mismatch"));
 
-    if(result.stored_defaults == 1) Serial.println(F("#D defaults stored"));
-    if(result.loaded_defaults == 1) Serial.println(F("#D reloaded defaults"));
+    if(result.stored_defaults == 1) Serial.println(F("#I stored default settings to EEPROM"));
+    if(result.loaded_defaults == 1) Serial.println(F("#I reloaded defaults from EEPROM"));
 
-    if(result.loaded_crc_mismatch_after_storing_defaults == 1) Serial.println(F("#E failed to load settings from EEPROM: CRC mismatch"));
-    if(result.loaded_version_mismatch_after_storing_defaults == 1) Serial.println(F("#E failed to load settings from EEPROM: version mismatch"));
+    if(result.loaded_crc_mismatch_after_storing_defaults == 1)
+        Serial.println(F("#E failed to load settings from EEPROM: CRC mismatch"));
+    if(result.loaded_version_mismatch_after_storing_defaults == 1)
+        Serial.println(F("#E failed to load settings from EEPROM: version mismatch"));
 
     if(result.fatal_error == 1) Serial.println(F("#F fatal error while loading settings; EEPROM defect?"));
     else Serial.println(F("#I settings loaded successfully from EEPROM"));
 }
 
+void Firmware::logStoreSettings(const StorageStoreResult &result)
+{
+    if(result.stored == 1) Serial.println(F("#I settings successfully stored to EEPROM"));
+    if(result.loaded_crc_mismatch_after_storing == 1) Serial.println(F("#F stored and reloaded settings have CRC error"));
+    if(result.fatal_error == 1) Serial.println(F("#F fatal error storing loading settings; EEPROM defect?"));
+}
+
 void Firmware::process()
 {
-    switch(operatingState.emergency)
+    switch(operatingState.getEmergency())
     {
     case EmergencyType::None:
         break;
     default:
         doHalt();
-        break;
     }
 
-    switch(operatingState.mode)
+#if defined(POWER_OFF_FEATURE)
+    if(digitalRead(POWER_OFF_SENSE_PIN) == POWER_OFF_SENSE_PIN_TRIGGER_LEVEL && operatingState.getMode() >= OperatingModeType::Operational)
+        operatingState.switchMode(OperatingModeType::ShutdownRequested);
+#endif
+#if defined(AUTO_POWER_OFF_FEATURE)
+    if(isAutoPowerOffTimeout() && operatingState.getMode() >= OperatingModeType::Operational)
+        operatingState.switchMode(OperatingModeType::AutoShutdown);
+#endif
+#if defined(EEPROM_RESET_PIN_FEATURE)
+    if(digitalRead(EEPROM_RESET_PIN) == EEPROM_RESET_PIN_TRIGGER_LEVEL && operatingState.getMode() >= OperatingModeType::Operational)
+        operatingState.switchMode(OperatingModeType::ManualEepromReset);
+#endif
+
+    switch(operatingState.getMode())
     {
-    case OperatingModeType::Measure:
+    case OperatingModeType::Operational:
         if(isSampleTimeout()) { doSample(); }
         if(isRenderTimeout()) { doRender(); }
         break;
+    case OperatingModeType::ManualEepromReset:
+        doResetAndReboot();
 
-    case OperatingModeType::Idle:
-        if(isRenderTimeout()) { doRender(); }
-        break;
+#if defined(POWER_OFF_FEATURE)
+    case OperatingModeType::ShutdownRequested:
+        Serial.print("#I Power off requested. Bye!");
+        doPowerOff();
+#endif
 
+#if defined(AUTO_POWER_OFF_FEATURE)
+    case OperatingModeType::AutoShutdown:
+        Serial.print("#I Auto shutdown timeout. Bye!");
+        doPowerOff();
+#endif
 
     default:
         break;
@@ -93,15 +138,15 @@ void Firmware::process()
 
 void Firmware::doSample()
 {
+#if defined(AD7887_SUBSEQUENT_READ_ERRORS)
     static uint8_t subsequentReadErrors{ 0 };
-    static uint8_t subsequentZeroSamples{ 0 };
-    if(!rfProbe.readSample(rfSampleRegister))
+    if(!rfProbe.device.readSample(rfProbe.sampleRegister))
     {
         subsequentReadErrors++;
         if(subsequentReadErrors > AD7887_SUBSEQUENT_READ_ERRORS)
         {
             Serial.print(F("#F "));
-            operatingState.emergency = EmergencyType::HaltOnUnrecoverableProbeError;
+            operatingState.setEmergency(EmergencyType::HaltOnUnrecoverableProbeError);
         }
         else { Serial.print(F("#W ")); }
         Serial.print(F("failed to read from probe ("));
@@ -109,14 +154,17 @@ void Firmware::doSample()
         Serial.println(F(")"));
     }
     else { subsequentReadErrors = 0; }
+#endif
 
-    if(rfSampleRegister.data == 0)
+#if defined(AD7887_SUBSEQUENT_ZERO_SAMPLES)
+    static uint8_t subsequentZeroSamples{ 0 };
+    if(rfProbe.sampleRegister.data == 0)
     {
         subsequentZeroSamples++;
         if(subsequentZeroSamples > AD7887_SUBSEQUENT_ZERO_SAMPLES)
         {
             Serial.print(F("#F "));
-            operatingState.emergency = EmergencyType::HaltOnUnrecoverableProbeError;
+            operatingState.setEmergency(EmergencyType::HaltOnUnrecoverableProbeError);
         }
         else { Serial.print(F("#W ")); }
         Serial.print(F("failed to read from probe: too many zero-samples ("));
@@ -124,14 +172,15 @@ void Firmware::doSample()
         Serial.println(F(")"));
     }
     else { subsequentZeroSamples = 0; }
+#endif
 
-    sampleTimer = 0;
+    timers.sampleMs = 0;
 }
 
 void Firmware::doRender()
 {
 
-#ifndef ACTIVITY_LED
+#if !defined(ACTIVITY_LED)
     static uint8_t isOn{ 0 };
     isOn = isOn ? 0 : 1;
 #else
@@ -142,19 +191,47 @@ void Firmware::doRender()
     display.display();
     Serial.print('.');
 
-    renderTimer = 0;
+    timers.renderMs = 0;
 }
+
+[[noreturn]] void Firmware::doResetAndReboot()
+{
+    while(digitalRead(EEPROM_RESET_PIN) == EEPROM_RESET_PIN_TRIGGER_LEVEL) {}
+    delay(EEPROM_RESET_PIN_DELAY_MS);
+
+    Settings defaultSettings;
+    defaultSettings.device.configWrites = settings.parameters.device.configWrites;
+    auto result = settings.storage.storeAndCheck(settings.parameters);
+    logStoreSettings(result);
+    Serial.flush();
+    delay(100);
+
+    reboot();
+    for(;;) {}
+}
+
+#if defined(POWER_OFF_FEATURE)
+[[noreturn]] void Firmware::doPowerOff()
+{
+    while(digitalRead(POWER_OFF_SENSE_PIN) == POWER_OFF_SENSE_PIN_TRIGGER_LEVEL) {}
+    delay(POWER_OFF_SENSE_PIN_DELAY_MS);
+
+    digitalWrite(POWER_OFF_PIN, POWER_OFF_PIN_ACTIVE);
+
+    for(;;) {}
+}
+#endif
 
 [[noreturn]] void Firmware::doHalt()
 {
     renderer.render();
     Serial.print(R"("{ EmergencyType" : ")");
-    Serial.print(emergencyTypeToStr(operatingState.emergency));
+    Serial.print(emergencyTypeToStr(operatingState.getEmergency()));
     Serial.println("\" }");
     for(;;) {}
 }
 
-#ifdef ACTIVITY_LED
+#if defined(ACTIVITY_LED)
 bool Firmware::toggleActivityLed()
 {
     static bool isOn{ false };
@@ -164,6 +241,11 @@ bool Firmware::toggleActivityLed()
 }
 #endif
 
-bool Firmware::isSampleTimeout() { return sampleTimer > settings.sample.separation_ms.get(); }
+bool Firmware::isSampleTimeout() { return timers.sampleMs > settings.parameters.sample.separation_ms.get(); }
 
-bool Firmware::isRenderTimeout() { return renderTimer > settings.render.separation_ms.get(); }
+bool Firmware::isRenderTimeout() { return timers.renderMs > settings.parameters.render.separation_ms.get(); }
+
+#if defined(AUTO_POWER_OFF_FEATURE)
+bool Firmware::isAutoPowerOffTimeout() { return timers.autoPowerOffSec > settings.parameters.device.autoPowerOffSeconds; }
+void Firmware::resetAutoPowerOffTimeout() { timers.autoPowerOffSec = 0; }
+#endif

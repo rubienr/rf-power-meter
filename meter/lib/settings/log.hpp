@@ -16,85 +16,85 @@ struct Stream
 #endif
 
 
-template <const char *ident> struct _LogSettings
+template <const char *indent> struct _LogSettings
 {
     explicit _LogSettings(Stream &outStream) : out(outStream) {}
 
-    void printIdent(uint8_t identSteps)
+    void printIdent(uint8_t indentSteps)
     {
-        for(; identSteps > 0; identSteps--)
-            out.print(ident);
+        for(; indentSteps > 0; indentSteps--)
+            out.print(indent);
     }
 
-    void log(const Version &v, uint8_t identSteps = 0)
+    void log(const Version &v, uint8_t indentSteps = 0)
     {
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.print(F(R"("major" : ")"));
         out.print(v.major);
         out.println(F("\","));
 
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.print(F(R"("minor" : ")"));
         out.print(v.minor);
         out.println(F("\","));
 
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.print(F(R"("patch" : ")"));
         out.print(v.patch);
         out.println(F("\""));
     }
 
-    void log(const DeviceInfo &d, uint8_t identSteps = 0)
+    void log(const DeviceInfo &d, uint8_t indentSteps = 0)
     {
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.println(F("\"version\" : {"));
-        log(d.version, identSteps + 1);
-        printIdent(identSteps);
+        log(d.version, indentSteps + 1);
+        printIdent(indentSteps);
         out.println(F("},"));
 
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.print(F(R"("configWrites" : ")"));
         out.print(d.configWrites);
         out.println(F("\""));
     }
 
-    void log(const Sample &s, uint8_t identSteps = 0)
+    void log(const Sample &s, uint8_t indentSteps = 0)
     {
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.print(F(R"("separation_ms" : ")"));
         out.print(s.separation_ms.get());
         out.println(F("\""));
     }
 
-    void log(const Render &r, uint8_t identSteps = 0)
+    void log(const Render &r, uint8_t indentSteps = 0)
     {
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.print(F(R"("separation_ms" : ")"));
         out.print(r.separation_ms.get());
         out.println(F("\""));
     }
 
-    void log(const Settings &s, uint8_t identSteps = 0)
+    void log(const Settings &s, uint8_t indentSteps = 0)
     {
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.println(F("\"device\" : {"));
-        log(s.device, identSteps + 1);
-        printIdent(identSteps);
+        log(s.device, indentSteps + 1);
+        printIdent(indentSteps);
         out.println(F("},"));
 
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.println(F("\"render\" : {"));
-        log(s.render, identSteps + 1);
-        printIdent(identSteps);
+        log(s.render, indentSteps + 1);
+        printIdent(indentSteps);
         out.println(F("},"));
 
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.println(F("\"sample\" : {"));
-        log(s.sample, identSteps + 1);
-        printIdent(identSteps);
+        log(s.sample, indentSteps + 1);
+        printIdent(indentSteps);
         out.println(F("},"));
 
-        printIdent(identSteps);
+        printIdent(indentSteps);
         out.print(F(R"("crc" : ")"));
         out.print(s.crc);
         out.println(F("\""));
@@ -102,5 +102,5 @@ template <const char *ident> struct _LogSettings
     Stream &out;
 };
 
-const char _ident2[]{ "  " };
-using LogSettings = _LogSettings<_ident2>;
+const char _indent2[]{ "  " };
+using LogSettings = _LogSettings<_indent2>;

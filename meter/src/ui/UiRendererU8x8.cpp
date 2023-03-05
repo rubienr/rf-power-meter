@@ -9,11 +9,4 @@ data(uiData), operatingState(operatingState), settings(settings), display(outDis
 {
 }
 
-void UiRenderer::render()
-{
-    if(operatingState.emergency != EmergencyType::None)
-    {
-        serial.print("#W EmergencyType=");
-        serial.println(emergencyTypeToStr(operatingState.emergency));
-    }
-}
+void UiRenderer::render() {}

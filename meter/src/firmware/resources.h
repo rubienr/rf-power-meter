@@ -32,26 +32,39 @@ struct Resources
         }
     } _{};
 
-    Settings settings{};
-    SettingsStorage<EepromStorageDevice<Settings>> settingsStorage{};
     OperatingState operatingState{};
+
+    struct
+    {
+        Settings parameters{};
+        SettingsStorage<EepromStorageDevice<Settings>> storage{};
+    } settings{};
 
     UiData uiData{};
     // U8G2_SSD1306_128X64_NONAME_F_HW_I2C display{ U8G2_R0, U8X8_PIN_NONE, SCL, SDA };
     U8X8_SSD1306_128X64_NONAME_HW_I2C display{ U8X8_PIN_NONE, SCL, SDA };
-    UiRenderer renderer{ uiData, operatingState, settingsStorage, display, Serial };
+    UiRenderer renderer{ uiData, operatingState, settings.storage, display, Serial };
 
-    ControlRegister rfProbeCtlRegister{ .dontCare = 0,
-                                        .mustBeZero1 = 0,
-                                        .onChipReference = 1,
-                                        .singleDualChanelSelect = 0,
-                                        .channelSelect = 0,
-                                        .mustBeZero2 = 0,
-                                        .powerManagement1 = 0,
-                                        .powerManagement0 = 1 };
-    AD7887 rfProbe{ rfProbeCtlRegister, chipSelectDigitalWrite, clkDigitalWrite, dataDigitalWrite, dataDigitalRead, delayMicroseconds };
-    SampleRegister rfSampleRegister{ .zero = 0, .data = 0 };
+    struct
+    {
+        ControlRegister ctlRegister{ .dontCare = 0,
+                                     .mustBeZero1 = 0,
+                                     .onChipReference = 1,
+                                     .singleDualChanelSelect = 0,
+                                     .channelSelect = 0,
+                                     .mustBeZero2 = 0,
+                                     .powerManagement1 = 0,
+                                     .powerManagement0 = 1 };
+        AD7887 device{ ctlRegister, chipSelectDigitalWrite, clkDigitalWrite, dataDigitalWrite, dataDigitalRead, delayMicroseconds };
+        SampleRegister sampleRegister{ .zero = 0, .data = 0 };
+    } rfProbe{};
 
-    elapsedMillis sampleTimer{ 0 };
-    elapsedMillis renderTimer{ 0 };
+    struct
+    {
+        elapsedMillis sampleMs{ 0 };
+        elapsedMillis renderMs{ 0 };
+#if defined(AUTO_POWER_OFF_FEATURE)
+        elapsedSeconds autoPowerOffSec{ 0 };
+#endif
+    } timers{};
 };
