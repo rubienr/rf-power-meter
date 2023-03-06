@@ -212,7 +212,7 @@ void Firmware::doRender()
 #endif
     display.setCursor(0, 0);
     display.print(isOn ? '+' : ' ');
-    display.print("V=");
+    display.print(F("V="));
     display.println(probe.sampleRegister.data);
 
     display.display();
