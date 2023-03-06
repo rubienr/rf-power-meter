@@ -57,12 +57,15 @@ struct Resources
                                      .dontCare = 0 };
         AD7887 device{ ctlRegister, chipSelectDigitalWrite, clkDigitalWrite, dataDigitalWrite, dataDigitalRead, delayMicroseconds };
         SampleRegister sampleRegister{ .data = 0, .zero = 0 };
-    } rfProbe{};
+    } probe{};
 
     struct
     {
         elapsedMillis sampleMs{ 0 };
         elapsedMillis renderMs{ 0 };
+#if defined(AD8318_TEMPERATURE_FEATURE)
+        elapsedMillis temperatureMs{ 0 };
+#endif
 #if defined(AUTO_POWER_OFF_FEATURE)
         elapsedSeconds autoPowerOffSec{ 0 };
 #endif

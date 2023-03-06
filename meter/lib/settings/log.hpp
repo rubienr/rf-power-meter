@@ -2,7 +2,7 @@
 #include "Settings.h"
 
 #if !defined(ENV_NATIVE)
-#include <Arduino.h>
+    #include <Arduino.h>
 #else
 struct Stream
 {
@@ -66,6 +66,16 @@ template <const char *indent> struct _LogSettings
         out.println(F("\""));
     }
 
+#if defined(AD8318_TEMPERATURE_FEATURE)
+    void log(const Temperature &t, uint8_t indentSteps = 0)
+    {
+        printIdent(indentSteps);
+        out.print(F(R"("separation_ms" : ")"));
+        out.print(t.separation_ms.get());
+        out.println(F("\""));
+    }
+#endif
+
     void log(const Render &r, uint8_t indentSteps = 0)
     {
         printIdent(indentSteps);
@@ -93,6 +103,14 @@ template <const char *indent> struct _LogSettings
         log(s.sample, indentSteps + 1);
         printIdent(indentSteps);
         out.println(F("},"));
+
+#if defined(AD8318_TEMPERATURE_FEATURE)
+        printIdent(indentSteps);
+        out.println(F("\"temperature\" : {"));
+        log(s.temperature, indentSteps + 1);
+        printIdent(indentSteps);
+        out.println(F("},"));
+#endif
 
         printIdent(indentSteps);
         out.print(F(R"("crc" : ")"));

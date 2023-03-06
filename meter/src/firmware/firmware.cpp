@@ -7,59 +7,77 @@ void Firmware::setup()
 {
     EarlyInitializer _{}; // TODO: this is 2nd attempt; 1st attempt does not initialize correctly
     operatingState.switchMode(OperatingModeType::Setup);
-    Serial.println(F("#D setup ..."));
 
+    { // initialize power off feature
 #if defined(POWER_OFF_FEATURE)
-    pinMode(POWER_OFF_SENSE_PIN, POWER_OFF_SENSE_PIN_TRIGGER_LEVEL == HIGH ? INPUT : INPUT_PULLUP);
-    pinMode(POWER_OFF_PIN, OUTPUT);
-    digitalWrite(POWER_OFF_PIN, POWER_OFF_PIN_ACTIVE == HIGH ? LOW : HIGH);
+        pinMode(POWER_OFF_SENSE_PIN, POWER_OFF_SENSE_PIN_TRIGGER_LEVEL == HIGH ? INPUT : INPUT_PULLUP);
+        pinMode(POWER_OFF_PIN, OUTPUT);
+        digitalWrite(POWER_OFF_PIN, POWER_OFF_PIN_ACTIVE == HIGH ? LOW : HIGH);
 #endif
-
-    Serial.print(F("#I RF Meter Version "));
-    Serial.print(VERSION_MAJOR);
-    Serial.print('.');
-    Serial.print(VERSION_MINOR);
-    Serial.print('.');
-    Serial.print(VERSION_PATCH);
-    Serial.print(F(" built "));
-    ;
-    Serial.print(__DATE__);
-    Serial.print(F(" "));
-    ;
-    Serial.print(__TIME__);
-    Serial.println();
-
-    Serial.println(F("#I Notes:"));
-    Serial.println(F("#I   - lines with leading '#' are human readable logs"));
-    Serial.println(F("#I   - lines without leading '#' are slightly machine parseable"));
-    Serial.println(F("#I   - D=DEBUG, I=INFO, E=ERROR, F=FATAL"));
-
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, 0);
-#if defined(ACTIVITY_LED)
-    pinMode(ACTIVITY_LED, OUTPUT);
-#endif
-
-    display.begin();
-    display.setPowerSave(0);
-    display.setFont(u8x8_font_chroma48medium8_r);
-    display.clear();
-
-    auto loadSettingsState = settings.storage.loadOrInit(settings.parameters);
-    logLoadSettings(loadSettingsState);
-    if(loadSettingsState.fatal_error) operatingState.setEmergency(EmergencyType::HaltOnUnrecoverableStorageError);
-    else
-    {
-        Serial.println(F("{\n  \"settings\" : {"));
-        LogSettings logger(Serial);
-        logger.log(settings.parameters, 2);
-        Serial.println(F("  }\n}"));
     }
 
+    { // print device info
+        Serial.print(F("#I RF Meter Version "));
+        Serial.print(VERSION_MAJOR);
+        Serial.print('.');
+        Serial.print(VERSION_MINOR);
+        Serial.print('.');
+        Serial.print(VERSION_PATCH);
+        Serial.print(F(" built "));
+        Serial.print(__DATE__);
+        Serial.print(F(" "));
+        Serial.print(__TIME__);
+        Serial.println();
+
+        Serial.println(F("#I Notes:"));
+        Serial.println(F("#I   - lines with leading '#' are human readable logs"));
+        Serial.println(F("#I   - lines without leading '#' are slightly machine parseable"));
+        Serial.println(F("#I   - D=DEBUG, I=INFO, E=ERROR, F=FATAL"));
+    }
+
+    { // initialize activity led feature
+        pinMode(LED_BUILTIN, OUTPUT);
+        digitalWrite(LED_BUILTIN, 0);
+#if defined(ACTIVITY_LED)
+        pinMode(ACTIVITY_LED, OUTPUT);
+#endif
+    }
+
+    { // initialize display
+        display.begin();
+        display.setPowerSave(0);
+        display.setFont(u8x8_font_chroma48medium8_r);
+        display.clear();
+    }
+
+    { // initialize settings/EEPROM
+        auto loadSettingsState = settings.storage.loadOrInit(settings.parameters);
+        logLoadSettings(loadSettingsState);
+        if(loadSettingsState.fatal_error) operatingState.setEmergency(EmergencyType::HaltOnUnrecoverableStorageError);
+        else
+        {
+            Serial.println(F("{\n  \"settings\" : {"));
+            LogSettings logger(Serial);
+            logger.log(settings.parameters, 2);
+            Serial.println(F("  }\n}"));
+        }
 
 #if defined(EEPROM_RESET_PIN_FEATURE)
-    pinMode(EEPROM_RESET_PIN, EEPROM_RESET_PIN_TRIGGER_LEVEL == HIGH ? INPUT : INPUT_PULLUP);
+        pinMode(EEPROM_RESET_PIN, EEPROM_RESET_PIN_TRIGGER_LEVEL == HIGH ? INPUT : INPUT_PULLUP);
 #endif
+    }
+
+    { // initialize measure probe AD7887/AD8318
+        pinMode(AD7887_CHIP_SELECT_PIN, OUTPUT);
+        pinMode(AD7887_CLK_PIN, OUTPUT);
+        pinMode(AD7887_DOUT_PIN, INPUT);
+        pinMode(AD7887_DIN_PIN, OUTPUT);
+#if defined(AD8318_TEMPERATURE_FEATURE)
+        pinMode(AD8318_TEMPERATURE_PIN, INPUT);
+        analogReference(AD8318_TEMPERATURE_REF_CONFIG);
+#endif
+    }
+
     operatingState.switchMode(OperatingModeType::Operational);
 }
 
@@ -115,6 +133,9 @@ void Firmware::process()
     case OperatingModeType::Operational:
         if(isSampleTimeout()) { doSample(); }
         if(isRenderTimeout()) { doRender(); }
+#if defined(AD8318_TEMPERATURE_FEATURE)
+        if(isTemperatureTimeout()) { doSampleTemperature(); }
+#endif
         break;
     case OperatingModeType::ManualEepromReset:
         doResetAndReboot();
@@ -140,7 +161,7 @@ void Firmware::doSample()
 {
 #if defined(AD7887_SUBSEQUENT_READ_ERRORS)
     static uint8_t subsequentReadErrors{ 0 };
-    if(!rfProbe.device.readSample(rfProbe.sampleRegister))
+    if(!probe.device.readSample(probe.sampleRegister))
     {
         subsequentReadErrors++;
         if(subsequentReadErrors > AD7887_SUBSEQUENT_READ_ERRORS)
@@ -158,7 +179,7 @@ void Firmware::doSample()
 
 #if defined(AD7887_SUBSEQUENT_ZERO_SAMPLES)
     static uint8_t subsequentZeroSamples{ 0 };
-    if(rfProbe.sampleRegister.data == 0)
+    if(probe.sampleRegister.data == 0)
     {
         subsequentZeroSamples++;
         if(subsequentZeroSamples > AD7887_SUBSEQUENT_ZERO_SAMPLES)
@@ -174,6 +195,9 @@ void Firmware::doSample()
     else { subsequentZeroSamples = 0; }
 #endif
 
+    Serial.print(F(R"({ "sample" : ")"));
+    Serial.print(probe.sampleRegister.data);
+    Serial.println(F("\" }"));
     timers.sampleMs = 0;
 }
 
@@ -188,11 +212,33 @@ void Firmware::doRender()
 #endif
     display.setCursor(0, 0);
     display.print(isOn ? '+' : ' ');
+    display.print("V=");
+    display.println(probe.sampleRegister.data);
+
     display.display();
-    Serial.print('.');
 
     timers.renderMs = 0;
 }
+
+
+#if defined(AD8318_TEMPERATURE_FEATURE)
+void Firmware::doSampleTemperature()
+{
+    const int rawTemp10Bit{ analogRead(AD8318_TEMPERATURE_PIN) };
+    const float miliVolt{ (rawTemp10Bit / (1024.0f - 1) * 1000 * static_cast<float>(AD8318_TEMPERATURE_REF_VOLTAGE)) };
+    double tempKelvin = miliVolt / static_cast<float>(AD8318_TEMPERATURE_MILLI_VOLT_KELVIN);
+
+    Serial.print(F(R"({ "temp" : { "mV" : ")"));
+    Serial.print(miliVolt);
+    Serial.print(F(R"(", "K" : ")"));
+    Serial.print(tempKelvin);
+    Serial.print(F(R"(", "C" : ")"));
+    Serial.print(tempKelvin - 273.15);
+    Serial.println(F("\" } } "));
+
+    timers.temperatureMs = 0;
+}
+#endif
 
 [[noreturn]] void Firmware::doResetAndReboot()
 {
@@ -201,7 +247,7 @@ void Firmware::doRender()
 
     Settings defaultSettings;
     defaultSettings.device.configWrites = settings.parameters.device.configWrites;
-    auto result = settings.storage.storeAndCheck(defaultSettings);
+    StorageStoreResult result = settings.storage.storeAndCheck(defaultSettings);
     logStoreSettings(result);
     Serial.flush();
     delay(100);
@@ -245,6 +291,9 @@ bool Firmware::isSampleTimeout() { return timers.sampleMs > settings.parameters.
 
 bool Firmware::isRenderTimeout() { return timers.renderMs > settings.parameters.render.separation_ms.get(); }
 
+#if defined(AD8318_TEMPERATURE_FEATURE)
+bool Firmware::isTemperatureTimeout() { return timers.temperatureMs > settings.parameters.temperature.separation_ms.get(); }
+#endif
 #if defined(AUTO_POWER_OFF_FEATURE)
 bool Firmware::isAutoPowerOffTimeout() { return timers.autoPowerOffSec > settings.parameters.device.autoPowerOffSeconds; }
 void Firmware::resetAutoPowerOffTimeout() { timers.autoPowerOffSec = 0; }

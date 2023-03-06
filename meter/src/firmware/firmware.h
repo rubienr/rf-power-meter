@@ -9,6 +9,10 @@ struct Firmware : public Resources
 protected:
     void doSample();
     void doRender();
+#if defined(AD8318_TEMPERATURE_FEATURE)
+    void doSampleTemperature();
+#endif
+
     [[noreturn]] void doResetAndReboot();
 #if defined(POWER_OFF_FEATURE) || defined(AUTO_POWER_OFF_FEATURE)
     [[noreturn]] static void doPowerOff();
@@ -23,6 +27,9 @@ protected:
 #endif
     bool isSampleTimeout();
     bool isRenderTimeout();
+#if defined(AD8318_TEMPERATURE_FEATURE)
+    bool isTemperatureTimeout();
+#endif
 #if defined(AUTO_POWER_OFF_FEATURE)
     bool isAutoPowerOffTimeout();
     void resetAutoPowerOffTimeout();

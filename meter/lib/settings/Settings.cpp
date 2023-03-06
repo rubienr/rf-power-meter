@@ -17,16 +17,16 @@ bool Sample::operator==(const Sample &other) const { return separation_ms == oth
 
 bool Render::operator==(const Render &other) const { return separation_ms == other.separation_ms; }
 
+#if defined(AD8318_TEMPERATURE_FEATURE)
+bool Temperature::operator==(const Temperature &other) const { return separation_ms == other.separation_ms; }
+#endif
+
 bool Settings::operator==(const Settings &other) const
 {
-    return device == other.device && render == other.render && sample == other.sample &&
-           crc == other.crc;
+    return device == other.device && render == other.render && sample == other.sample && crc == other.crc;
 }
 
-uint32_t Settings::computeCrc() const
-{
-    return ::computeCrc(asPtr(), sizeof(Settings) - sizeof(crc));
-}
+uint32_t Settings::computeCrc() const { return ::computeCrc(asPtr(), sizeof(Settings) - sizeof(crc)); }
 
 bool Settings::checkCrc() const { return crc == computeCrc(); }
 
