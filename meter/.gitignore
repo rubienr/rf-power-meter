@@ -1,5 +1,6 @@
 # IDE
 .idea
+.swp
 
 # platformio
 .pio
