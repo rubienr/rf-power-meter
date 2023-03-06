@@ -27,6 +27,7 @@ public:
      */
     void updateControlRegister(const ControlRegister &newFlags);
 
+    const ControlRegister &getControlRegister() const;
 
 protected:
     void uint16Transaction();

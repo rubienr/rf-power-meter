@@ -47,16 +47,16 @@ struct Resources
 
     struct
     {
-        ControlRegister ctlRegister{ .dontCare = 0,
-                                     .mustBeZero1 = 0,
-                                     .onChipReference = 1,
-                                     .singleDualChanelSelect = 0,
-                                     .channelSelect = 0,
-                                     .mustBeZero2 = 0,
+        ControlRegister ctlRegister{ .powerManagement0 = 1,
                                      .powerManagement1 = 0,
-                                     .powerManagement0 = 1 };
+                                     .mustBeZero1 = 0,
+                                     .channelSelect = 0,
+                                     .singleDualChanelSelect = 0,
+                                     .onChipReference = 1,
+                                     .mustBeZero2 = 0,
+                                     .dontCare = 0 };
         AD7887 device{ ctlRegister, chipSelectDigitalWrite, clkDigitalWrite, dataDigitalWrite, dataDigitalRead, delayMicroseconds };
-        SampleRegister sampleRegister{ .zero = 0, .data = 0 };
+        SampleRegister sampleRegister{ .data = 0, .zero = 0 };
     } rfProbe{};
 
     struct
