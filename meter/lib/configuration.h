@@ -72,6 +72,7 @@
     #elif defined(ARDUINO_AVR_LEONARDO)                    // mcu=atmega32u4
         #define AD8318_TEMPERATURE_REF_CONFIG  INTERNAL    // default: INTERNAL
         #define AD8318_TEMPERATURE_REF_VOLTAGE 2.56        // default: 2.56
+    #elif defined(ENV_NATIVE)                              // unitest build
     #else
         #error "configuration missing for this MCU"
     #endif
