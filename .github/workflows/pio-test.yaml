@@ -63,7 +63,7 @@ jobs:
           cd meter
           platformio test --without-uploading --without-testing \
             --environment test_uno \
-            --environment_test_leonardo \
+            --environment test_leonardo \
             --environment test_mega2560
           platformio test --environment test_native
 
