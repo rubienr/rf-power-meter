@@ -1,5 +1,7 @@
 #pragma once
 #include "../../lib/ad7887/AD7887.h"
+#include "../../lib/ad8138/AD8138.h"
+#include "../../lib/ad8138/progmemLoader.h"
 #include "../../lib/settings/Settings.h"
 #include "../lib/storage/EepromStorageDevice.hpp"
 #include "../lib/storage/SettingsStorage.hpp"
@@ -10,6 +12,8 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <U8x8lib.h>
+
+extern const float kValuesSets[6][4] PROGMEM;
 
 void clkDigitalWrite(uint8_t digitalValue);
 void chipSelectDigitalWrite(uint8_t digitalValue);
@@ -57,6 +61,9 @@ struct Resources
                                      .dontCare = 0 };
         AD7887 device{ ctlRegister, chipSelectDigitalWrite, clkDigitalWrite, dataDigitalWrite, dataDigitalRead, delayMicroseconds };
         SampleRegister sampleRegister{ .data = 0, .zero = 0 };
+
+        KValues3rdOrderFloat kValues{};
+        AD8138Converter3rdOrder converter{ kValues };
     } probe{};
 
     struct

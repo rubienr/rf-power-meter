@@ -6,7 +6,7 @@
 #define VERSION_MINOR            0
 #define VERSION_PATCH            1
 
-// ----- section: sample
+// ----- section: sampling
 
 #define SAMPLE_TIMER_MS_DEFAULT  50
 #define SAMPLE_TIMER_MS_MAX      1000
@@ -22,7 +22,7 @@
 
 // #define ACTIVITY_LED         LED_BUILTIN // enables LED blinking on each render loop; disable in production
 
-// ----- section: storage
+// ----- section: EEPROM settings storage
 
 #define EEPROM_START_ADDRESS     0x0 // move the start address if EEPROM is broken to avoid damaged segments
 #define EEPROM_RESET_PIN_FEATURE     // enable/disable manual EEPROM reset feature
@@ -77,6 +77,36 @@
         #error "configuration missing for this MCU"
     #endif
 #endif
+
+#define AD8318_CALIBRATION_FREQUENCY_MIN     0 // min index in AD8318_CALIBRATION_FACTORS
+#define AD8318_CALIBRATION_FREQUENCY_MAX     5 // max index in AD8318_CALIBRATION_FACTORS
+#define AD8318_CALIBRATION_FREQUENCY_DEFAULT 1 // default index in AD8318_CALIBRATION_FACTORS
+
+// frequencies that have calibration sets in AD8318_CALIBRATION_FACTORS
+#define AD8318_CALIBRATION_FREQUENCY_MHZ \
+    {                                    \
+        50, 145, 433, 1000, 2000, 3000   \
+    }
+
+// Calibration factors layout - AD8318_CALIBRATION_FACTORS
+// { { k0, k1, k2, k3 },  for AD8318_CALIBRATION_FREQUENCY_MHZ[0]
+//   { k0, k1, k2, k3 },  for AD8318_CALIBRATION_FREQUENCY_MHZ[1]
+//   { k0, k1, k2, k3 },  for AD8318_CALIBRATION_FREQUENCY_MHZ[2]
+//   { k0, k1, k2, k3 },  for AD8318_CALIBRATION_FREQUENCY_MHZ[3]
+//   { k0, k1, k2, k3 },  for AD8318_CALIBRATION_FREQUENCY_MHZ[4]
+//   { k0, k1, k2, k3 } } for AD8318_CALIBRATION_FREQUENCY_MHZ[5]
+//
+// clang-format off
+#define AD8318_CALIBRATION_FACTORS \
+    {                              \
+        { 2.80342581E+01, -3.40466467E-02, 5.36059447E-06, -9.64826574E-10 }, \
+        { 2.81602896E+01, -3.43993780E-02, 5.36926411E-06, -9.35643168E-10 }, \
+        { 2.73776126E+01, -3.35128770E-02, 4.76795974E-06, -8.13901646E-10 }, \
+        { 2.63845320E+01, -3.25466666E-02, 4.19419955E-06, -7.11984824E-10 }, \
+        { 2.63845320E+01, -3.25466666E-02, 4.19419955E-06, -7.11984824E-10 }, \
+        { 2.63845320E+01, -3.25466666E-02, 4.19419955E-06, -7.11984824E-10 }  \
+    }
+// clang-format on
 
 // ----- section: auto power off
 

@@ -1,6 +1,8 @@
 #include "firmware.h"
 #include "../../lib/settings/log.hpp"
 
+using KValuesLoader = KValues3rdOrderLoader<float>;
+
 void (*reboot)(void) = 0;
 
 void Firmware::setup()
@@ -76,6 +78,27 @@ void Firmware::setup()
         pinMode(AD8318_TEMPERATURE_PIN, INPUT);
         analogReference(AD8318_TEMPERATURE_REF_CONFIG);
 #endif
+        KValuesLoader::load(&kValuesSets[0][0], probe.kValues);
+        char b[16]{ 0 };
+        double d;
+        Serial.print(F(R"({ "kValues" : { "k0" : ")"));
+        d = probe.kValues.k0;
+        snprintf(b, 15, "%e", d);
+        Serial.print(b);
+        Serial.print(F(R"(", "k1" : ")"));
+        d = probe.kValues.k1;
+        snprintf(b, 15, "%e", d);
+        Serial.print(b);
+        Serial.print(F(R"(", "k2" : ")"));
+        d = probe.kValues.k2;
+        snprintf(b, 15, "%e", d);
+        Serial.print(b);
+        Serial.print(F(R"(", "k3" : ")"));
+        d = probe.kValues.k3;
+        snprintf(b, 15, "%e", d);
+        Serial.print(b);
+        Serial.println(F(" } }"));
+        probe.converter.setCorrectionCoefficients(probe.kValues);
     }
 
     operatingState.switchMode(OperatingModeType::Operational);
@@ -159,9 +182,11 @@ void Firmware::process()
 
 void Firmware::doSample()
 {
+    bool success{ probe.device.readSample(probe.sampleRegister) };
+
 #if defined(AD7887_SUBSEQUENT_READ_ERRORS)
     static uint8_t subsequentReadErrors{ 0 };
-    if(!probe.device.readSample(probe.sampleRegister))
+    if(!success)
     {
         subsequentReadErrors++;
         if(subsequentReadErrors > AD7887_SUBSEQUENT_READ_ERRORS)
@@ -195,9 +220,20 @@ void Firmware::doSample()
     else { subsequentZeroSamples = 0; }
 #endif
 
-    Serial.print(F(R"({ "sample" : ")"));
+    float dbmW, w;
+    SiUnitType si;
+    probe.converter.convertDbMilliWatt(probe.sampleRegister.data, dbmW);
+    probe.converter.convertWatt(dbmW, w, si);
+    Serial.print(F(R"({ "sample" : { "raw" : ")"));
     Serial.print(probe.sampleRegister.data);
-    Serial.println(F("\" }"));
+    Serial.print(F(R"(", "dBmW" : ")"));
+    Serial.print(dbmW);
+    Serial.print(F(R"(", "W" : { "w" : ")"));
+    Serial.print(w);
+    Serial.print(F(R"(", "siUnit" : ")"));
+    Serial.print(siUnitTypeToStr(si));
+
+    Serial.println(F("\" } } }"));
     timers.sampleMs = 0;
 }
 
