@@ -1,29 +1,6 @@
 #include "AD8138.h"
 #include <math.h>
 
-const char *siUnitTypeToStr(SiUnitType t)
-{
-    switch(t)
-    {
-    case SiUnitType::KILO:
-        return "k";
-    case SiUnitType::TIMES_ONE:
-        return " ";
-    case SiUnitType::MILLI:
-        return "m";
-    case SiUnitType::MICRO:
-        return "u";
-    case SiUnitType::NANO:
-        return "n";
-    case SiUnitType::PICO:
-        return "p";
-    case SiUnitType::FEMTO:
-        return "f";
-    default:
-        return "-";
-    }
-}
-
 AD8138Converter3rdOrder::AD8138Converter3rdOrder(const KValues3rdOrderFloat &kValues, uint8_t attenuationDb) :
 k0(kValues.k0), k1(kValues.k1), k2(kValues.k2), k3(kValues.k3), attenuationDb(attenuationDb)
 {

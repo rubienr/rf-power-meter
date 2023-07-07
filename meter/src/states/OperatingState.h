@@ -1,4 +1,5 @@
 #pragma once
+#include "../configuration.h"
 #include <Arduino.h>
 #include <inttypes.h>
 
@@ -8,6 +9,12 @@ enum class EmergencyType : uint8_t
     HaltOnUnrecoverableError,
     HaltOnUnrecoverableStorageError,
     HaltOnUnrecoverableProbeError,
+#if defined(HAS_DISPLAY)
+    HaltOnDisplayInitError,
+#endif // HAS_DISPLAY
+#if defined(HAS_DATA_SINK_I2C)
+    HaltOnDataSinkInitError,
+#endif // HAS_DATA_SINK_I2C
     UnknownError,
 };
 
@@ -17,7 +24,9 @@ enum class OperatingModeType : uint8_t
 {
     EarlyInit,
     Setup,
+#if defined(EEPROM_RESET_PIN_FEATURE)
     ManualEepromReset,
+#endif
     Operational,
     AutoShutdown,
     ShutdownRequested,
@@ -29,33 +38,11 @@ const char *operatingModeTypeToStr(OperatingModeType t);
 class OperatingState
 {
 public:
-    void switchMode(const OperatingModeType &next)
-    {
-        Serial.print(F("#I "));
-        Serial.print(operatingModeTypeToStr(mode));
-        Serial.print(F(" -> "));
-        mode = next;
-        Serial.println(operatingModeTypeToStr(mode));
-
-        Serial.print(F(R"({ "operatingMode" : ")"));
-        Serial.print(operatingModeTypeToStr(mode));
-        Serial.println(F("\" }"));
-    }
+    void switchMode(const OperatingModeType &next);
 
     const OperatingModeType &getMode() { return mode; }
 
-    void setEmergency(const EmergencyType &e)
-    {
-        Serial.print(F("#E "));
-        Serial.print(emergencyTypeToStr(emergency));
-        Serial.print(F(" -> "));
-        emergency = e;
-        Serial.println(emergencyTypeToStr(emergency));
-
-        Serial.print(F(R"({ "emergency" : ")"));
-        Serial.print(emergencyTypeToStr(emergency));
-        Serial.println(F("\" }"));
-    }
+    void setEmergency(const EmergencyType &e);
     const EmergencyType &getEmergency() { return emergency; }
 
 protected:

@@ -3,6 +3,8 @@
 #include "ConstrainedNumericValue.hpp"
 #include <inttypes.h>
 
+namespace settings
+{
 struct Version
 {
     Version &operator=(const Version &) = default;
@@ -34,12 +36,23 @@ struct Sample
     ConstrainedNumericValue<uint16_t, SAMPLE_TIMER_MS_DEFAULT, SAMPLE_TIMER_MS_MIN, SAMPLE_TIMER_MS_MAX> separation_ms{};
 } __attribute__((__packed__));
 
+#if defined(HAS_DISPLAY)
 struct Render
 {
     Render &operator=(const Render &) = default;
     bool operator==(const Render &other) const;
     ConstrainedNumericValue<uint16_t, RENDER_TIMER_MS_DEFAULT, RENDER_TIMER_MS_MIN, RENDER_TIMER_MS_MAX> separation_ms{};
 } __attribute__((__packed__));
+#endif // HS_DISPLAY
+
+#if defined(HAS_DATA_SINK_I2C)
+struct DataSink
+{
+    DataSink &operator=(const DataSink &) = default;
+    bool operator==(const DataSink &other) const;
+    ConstrainedNumericValue<uint16_t, DATA_SINK_TIMER_MS_DEFAULT, DATA_SINK_TIMER_MS_MIN, DATA_SINK_TIMER_MS_MAX> separation_ms{};
+} __attribute__((__packed__));
+#endif // HAS_DATA_SINK_I2C
 
 #if defined(AD8318_TEMPERATURE_FEATURE)
 struct Temperature
@@ -61,7 +74,12 @@ struct Settings
     void updateCrc();
 
     DeviceInfo device;
+#if defined(HAS_DISPLAY)
     Render render;
+#endif // HAS_DISPLAY
+#if defined(HAS_DATA_SINK_I2C)
+    DataSink dataSink;
+#endif // HAS_DATA_SINK_I2C
     Sample sample;
 #if defined(AD8318_TEMPERATURE_FEATURE)
     Temperature temperature;
@@ -69,3 +87,5 @@ struct Settings
     uint32_t crc{ 0 }; // CRC must be last field
 
 } __attribute__((__packed__));
+
+} // namespace settings

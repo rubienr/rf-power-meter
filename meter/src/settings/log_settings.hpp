@@ -76,6 +76,7 @@ template <const char *indent> struct _LogSettings
     }
 #endif
 
+#if defined(HAS_DISPLAY)
     void log(const Render &r, uint8_t indentSteps = 0)
     {
         printIdent(indentSteps);
@@ -83,6 +84,7 @@ template <const char *indent> struct _LogSettings
         out.print(r.separation_ms.get());
         out.println(F("\""));
     }
+#endif // HAS_DISPLAY
 
     void log(const Settings &s, uint8_t indentSteps = 0)
     {
@@ -92,11 +94,13 @@ template <const char *indent> struct _LogSettings
         printIdent(indentSteps);
         out.println(F("},"));
 
+#if defined(HAS_DISPLAY)
         printIdent(indentSteps);
         out.println(F("\"render\" : {"));
         log(s.render, indentSteps + 1);
         printIdent(indentSteps);
         out.println(F("},"));
+#endif // HAS_DISPLAY
 
         printIdent(indentSteps);
         out.println(F("\"sample\" : {"));

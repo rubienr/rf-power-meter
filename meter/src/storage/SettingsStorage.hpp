@@ -5,6 +5,8 @@
 #include "StorageTransactionResult.h"
 #include <inttypes.h>
 
+using namespace settings;
+
 template <typename StorageDevice_t> class SettingsStorage
 {
 public:
@@ -42,7 +44,9 @@ public:
         StorageLoadResult result;
         Settings loadedSettings;
         loadedSettings.sample.separation_ms = 99;
+#if defined(HAS_DISPLAY)
         loadedSettings.render.separation_ms = 91;
+#endif // HAS_DISPLAY
 
         load(loadedSettings);
         if(loadedSettings.checkCrc())
@@ -74,7 +78,7 @@ public:
         result.loaded_defaults = true;
 
         if(loadedSettings.checkCrc())
-        { // OK: CRC check passed after default settings have been re-stored with default valued
+        {     // OK: CRC check passed after default settings have been re-stored with default valued
             if(loadedSettings.device.version == defaultSettings.device.version)
             { // OK: version check passed
                 defaultSettings = loadedSettings;
