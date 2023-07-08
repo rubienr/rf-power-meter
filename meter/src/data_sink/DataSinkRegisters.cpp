@@ -6,7 +6,7 @@ uint8_t registerAddressToUnderlyingType(RegisterAddress address) { return static
 
 uint8_t registerConstantsToUnderlyingType(RegisterConstants c) { return static_cast<uint8_t>(c); }
 
-size_t RegisterAddressIndex::operator++(int)
+size_t RegisterAddressIndex::operator++()
 {
     auto tmp{ address };
     ++address;

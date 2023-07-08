@@ -1,5 +1,5 @@
 #pragma once
-#include "../configuration.h"
+#include "../rfmeter_configuration.h"
 #include "registers.h"
 #include <inttypes.h>
 

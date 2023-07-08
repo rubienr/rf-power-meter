@@ -1,8 +1,6 @@
 #include "Display.h"
 
 #if defined(HAS_DISPLAY)
-
-    #include "../configuration.h"
     #include <Arduino.h>
 
 bool displayInit(display_t &display)

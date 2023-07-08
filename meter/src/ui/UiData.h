@@ -1,5 +1,5 @@
 #pragma once
-#include "./si_units/si_unit_type.h"
+#include "../lib/si_units/si_unit_type.h"
 #include <inttypes.h>
 
 class SampleRegister;

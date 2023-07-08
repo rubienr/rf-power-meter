@@ -3,8 +3,7 @@
 
 template <typename T, T defaultValue, T minValue, T maxValue> struct ConstrainedNumericValue
 {
-    static_assert(defaultValue >= minValue && defaultValue <= maxValue && minValue <= maxValue,
-                  "assert(minValue <= defaultValue <= maxValue)");
+    static_assert(defaultValue >= minValue && defaultValue <= maxValue && minValue <= maxValue, "assert(minValue <= defaultValue <= maxValue)");
 
 public:
     explicit operator T() const { return value; }

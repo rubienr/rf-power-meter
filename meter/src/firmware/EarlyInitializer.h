@@ -1,6 +1,6 @@
 #pragma once
+#include "../lib/rfmeter_configuration.h"
 #include <HardwareSerial.h>
-#include "configuration.h"
 
 /**
  * Note: Be careful to call init() once,

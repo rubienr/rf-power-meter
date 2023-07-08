@@ -1,10 +1,10 @@
 #pragma once
-#include "./ad7887/AD7887.h"
-#include "./ad8138/AD8138.h"
-#include "./ad8138/progmemLoader.h"
-#include "./settings/Settings.h"
-#include "./storage/EepromStorageDevice.hpp"
-#include "./storage/SettingsStorage.hpp"
+#include "../lib/ad7887/AD7887.h"
+#include "../lib/ad8138/AD8138.h"
+#include "../lib/ad8138/progmemLoader.h"
+#include "../lib/settings/Settings.h"
+#include "../lib/storage/EepromStorageDevice.hpp"
+#include "../lib/storage/SettingsStorage.hpp"
 #include "elapsedMillis.h"
 #include "states/OperatingState.h"
 #include "ui/Display.h"
@@ -74,4 +74,3 @@ struct Resources
 #endif // AUTO_POWER_OFF_FEATURE
     } timers{};
 };
-

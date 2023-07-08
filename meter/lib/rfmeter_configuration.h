@@ -10,6 +10,12 @@
     #define VERSION_MAJOR 0
     #define VERSION_MINOR 0
     #define VERSION_PATCH 1
+#elif defined(ENV_NATIVE)
+    #define VERSION_MAJOR 0
+    #define VERSION_MINOR 0
+    #define VERSION_PATCH 0
+else
+    #error
 #endif
 
 // ----- section: probe sampling
@@ -89,6 +95,7 @@
     #elif defined(ARDUINO_AVR_NANO) // mcu=atmega328p or mcu=atmega328pb
         #define DATA_SINK_I2C_SCL PIN_WIRE_SCL
         #define DATA_SINK_I2C_SDA PIN_WIRE_SDA
+    #elif defined(ENV_NATIVE)
     #else
         #error
     #endif
@@ -142,6 +149,7 @@
         #define AD7887_CLK_PIN         7  // SCLK - J2, pin 1; clock to AD7887
         #define AD7887_DOUT_PIN        9  // DOUT - J2, pin 3; data from AD7887
         #define AD7887_DIN_PIN         10 // DIN  - J2, pin 5; data to AD7887
+    #elif defined(ENV_NATIVE)
     #else
         #error
     #endif
@@ -173,6 +181,7 @@
             #define AD8318_TEMPERATURE_PIN A5         // TEMP - J2, pin 4; analog temperature out from AD8318
         #elif defined(ARDUINO_AVR_NANO)
             #define AD8318_TEMPERATURE_PIN A0         // TEMP - J2, pin 4; analog temperature out from AD8318
+        #elif defined(ENV_NATIVE)
         #else
             #error
         #endif

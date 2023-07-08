@@ -1,5 +1,5 @@
 #pragma once
-#include "../configuration.h"
+#include "../lib/rfmeter_configuration.h"
 
 #if defined(HAS_DISPLAY)
     #if defined(DISPLAY_I2C)

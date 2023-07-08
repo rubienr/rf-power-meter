@@ -1,5 +1,5 @@
 #pragma once
-#include "../configuration.h"
+#include "../lib/rfmeter_configuration.h"
 #include <Arduino.h>
 #include <inttypes.h>
 

@@ -1,6 +1,5 @@
 #include "AD7887.h"
 
-
 AD7887::AD7887(const ControlRegister &ctrlRegister,
                void (*chipSelectDigitalWrite)(uint8_t),
                void (*clkDigitalWrite)(uint8_t),

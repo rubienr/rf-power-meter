@@ -94,7 +94,7 @@ struct RegisterAddressIndex
 {
     using UnderlyingType = size_t;
 
-    UnderlyingType operator++(int);
+    UnderlyingType operator++();
     RegisterAddressIndex &operator=(UnderlyingType new_address);
     UnderlyingType operator*() const { return address; }
 

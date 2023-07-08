@@ -1,11 +1,14 @@
 #include "firmware.h"
-#include "./settings/log_settings.hpp"
+#include "../lib/settings/log_settings.hpp"
 #if defined(HAS_DATA_SINK_I2C)
     #include "data_sink/DataSinkRegisters.h"
     #include <Wire.h>
 #endif // HAS_DATA_SINK_I2C
 
+#if defined(HAS_DATA_SINK_I2C)
 using namespace datasink;
+#endif // HAS_DATA_SINK_I2C
+
 using KValuesLoader = KValues3rdOrderLoader<float>;
 
 void (*reboot)(void) = 0;
@@ -194,6 +197,8 @@ void Firmware::doSamplePowerMeter()
 
     Serial.println(F("\" } } }"));
 
+#if defined(HAS_DATA_SINK_I2C)
+    // todo refactoring
     Wire.beginTransmission(DATA_SINK_I2C_ADDRESS);
     Wire.write(registerAddressToUnderlyingType(RegisterAddress::PowerSampleDbmW));
     Data data{ .asFloat = uiData.probe.dbmW };
@@ -211,7 +216,7 @@ void Firmware::doSamplePowerMeter()
     Wire.write(data.asBytes.xLowByte);
     Wire.write(data.asBytes.xHighByte);
     Wire.endTransmission(true);
-
+#endif // HAS_DATA_SINK_I2C
     timers.sampleMs = 0;
 }
 

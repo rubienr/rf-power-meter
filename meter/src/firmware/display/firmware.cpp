@@ -140,7 +140,7 @@ void Firmware::onReadFromSinkEvent()
     Serial.print(" value=");
     Serial.println(static_cast<int16_t>(value));
     Wire.write(value);
-    sink.address++;
+    ++sink.address;
 }
 
 void Firmware::onWriteToSinkEvent(int count)
@@ -167,7 +167,7 @@ void Firmware::onWriteToSinkEvent(int count)
         Serial.print("]=");*/
         sink.memory.asBytes[*sink.address] = Wire.read();
         // Serial.print(static_cast<int16_t>(sink.memory.asBytes[*sink.address]));
-        sink.address++;
+        ++sink.address;
     }
     // Serial.println();
 }

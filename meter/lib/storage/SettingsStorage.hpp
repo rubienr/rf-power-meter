@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../configuration.h"
+#include "../rfmeter_configuration.h"
 #include "../settings/Settings.h"
 #include "StorageTransactionResult.h"
 #include <inttypes.h>

@@ -1,6 +1,6 @@
 #include "ui/parallel_8bit/UiRendererTftShieldV3.h"
-#include "ui/UiData.h"
 #include "states/OperatingState.h"
+#include "ui/UiData.h"
 #include <MCUFRIEND_kbv.h>
 
 
@@ -41,7 +41,6 @@ void UiRenderer::render()
     display.println(" dBmW");
     display.setTextSize(5);
 
-    if(data.probe.sample <= 0) return;
     display.println();
     display.setTextSize(5);
     display.print(data.probe.watt);

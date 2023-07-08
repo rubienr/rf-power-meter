@@ -1,13 +1,14 @@
 #if !defined(ENV_NATIVE)
-#include <Arduino.h>
+    #include <Arduino.h>
 #else
-#include <cstring>
+    #include <cstring>
 #endif
 #include "../../lib/settings/Settings.h"
 #include "../../lib/storage/DummyStorageDevice.hpp"
 #include "../../lib/storage/SettingsStorage.hpp"
 #include <unity.h>
 
+using namespace settings;
 
 struct DummyConstLoadStorageDeviceCrcOk
 {

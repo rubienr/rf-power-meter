@@ -1,6 +1,6 @@
 #pragma once
+#include "../si_units/si_unit_type.h"
 #include "KValues3rdOrder.hpp"
-#include "si_units/si_unit_type.h"
 #include <inttypes.h>
 
 using KValues3rdOrderFloat = KValues3rdOrder<float>;
