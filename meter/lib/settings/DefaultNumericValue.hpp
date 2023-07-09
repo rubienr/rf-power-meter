@@ -1,5 +1,8 @@
 #pragma once
 
+namespace settings
+{
+
 template <typename T, T defaultValue> struct DefaultNumericValue
 {
 public:
@@ -19,3 +22,5 @@ protected:
     T value{ defaultValue };
 
 } __attribute__((__packed__));
+
+} // namespace settings

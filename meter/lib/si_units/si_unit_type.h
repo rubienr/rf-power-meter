@@ -1,7 +1,10 @@
 #pragma once
 #include <inttypes.h>
 
-enum class SiUnitType : uint8_t
+namespace si
+{
+
+enum class UnitType : uint8_t
 {
     KILO,      // 10^3
     TIMES_ONE, // 10^0
@@ -12,4 +15,6 @@ enum class SiUnitType : uint8_t
     FEMTO,     // 10^-15
 };
 
-const char siUnitTypeToStr(SiUnitType t);
+const char unitTypeToStr(UnitType t);
+
+} // namespace si

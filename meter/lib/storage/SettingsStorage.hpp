@@ -5,26 +5,25 @@
 #include "StorageTransactionResult.h"
 #include <inttypes.h>
 
+namespace storage
+{
+
 using namespace settings;
 
 template <typename StorageDevice_t> class SettingsStorage
 {
 public:
-    /**
-     * Loads Settings from EEPROM (without CRC check).
-     * @param settings data out
-     * @param storage
-     */
+    /// Loads Settings from EEPROM (without CRC check).
+    /// @param settings data out
+    /// @param storage
     void load(Settings &s) const { storage.get(EEPROM_START_ADDRESS, s); }
 
-    /**
-     * Stores the given Settings to EEPROM (without CRC check).
-     * This method updates the
-     * - CRC and the
-     * - total writes fields.
-     * @param settings
-     * @param storage
-     */
+    /// Stores the given Settings to EEPROM (without CRC check).
+    /// This method updates the
+    /// - CRC and the
+    /// - total writes fields.
+    /// @param settings
+    /// @param storage
     void store(Settings &settings)
     {
         settings.device.configWrites++;
@@ -32,16 +31,14 @@ public:
         storage.put(EEPROM_START_ADDRESS, settings);
     }
 
-    /**
-     * Store, re-load and check the CRC from EEPROM vs. the given settings argument.
-     * This function applies store() and thus may update the given settings argument.
-     * @param defaultSettings
-     * @param storage
-     * @return false if the re-loaded value's CRC does not match
-     */
-    StorageLoadResult loadOrInit(Settings &defaultSettings)
+    /// Store, re-load and check the CRC from EEPROM vs. the given settings argument.
+    /// This function applies store() and thus may update the given settings argument.
+    /// @param defaultSettings
+    /// @param storage
+    /// @return false if the re-loaded value's CRC does not match
+    LoadResult loadOrInit(Settings &defaultSettings)
     {
-        StorageLoadResult result;
+        LoadResult result;
         Settings loadedSettings;
         loadedSettings.sample.separation_ms = 99;
 #if defined(HAS_DISPLAY)
@@ -104,17 +101,15 @@ public:
         }
     }
 
-    /**
-     * Tries to load from EEPROM and does error handling on CRC mismatch or version mismatch.
-     * This function applies store() and thus may update the given settings argument.
-     * @param defaultSettings
-     * @param storage
-     * @return false if error handling is not possible, true (regardless of error handling attempts)
-     * if loaded CRC is valid and the loaded version matches the expected version
-     */
-    StorageStoreResult storeAndCheck(Settings &defaultSettings)
+    /// Tries to load from EEPROM and does error handling on CRC mismatch or version mismatch.
+    /// This function applies store() and thus may update the given settings argument.
+    /// @param defaultSettings
+    /// @param storage
+    /// @return false if error handling is not possible, true (regardless of error handling attempts)
+    /// if loaded CRC is valid and the loaded version matches the expected version
+    StoreResult storeAndCheck(Settings &defaultSettings)
     {
-        StorageStoreResult result;
+        StoreResult result;
         Settings loadedSettings;
 
         store(defaultSettings);
@@ -148,3 +143,5 @@ public:
 protected:
     StorageDevice_t storage{};
 };
+
+} // namespace storage

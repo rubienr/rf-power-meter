@@ -1,14 +1,14 @@
 #pragma once
-#include "../Display.h"
+#include "../lib/rfmeter_configuration.h"
+
+#if defined(HAS_DISPLAY)
 
 struct UiData;
 class Stream;
-class OperatingState;
-
+struct OperatingState;
 
 struct UiRenderer
 {
-public:
     UiRenderer(UiData &uiData, OperatingState &operatingState, display_t &outDisplay, Stream &outSerial);
     void init();
     void render();
@@ -19,3 +19,5 @@ private:
     display_t &display;
     Stream &serial;
 };
+
+#endif // HAS_DISPLAY

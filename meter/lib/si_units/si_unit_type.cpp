@@ -1,24 +1,29 @@
 #include "si_unit_type.h"
 
-const char siUnitTypeToStr(SiUnitType t)
+namespace si
+{
+
+const char unitTypeToStr(UnitType t)
 {
     switch(t)
     {
-    case SiUnitType::KILO:
+    case UnitType::KILO:
         return 'k';
-    case SiUnitType::TIMES_ONE:
+    case UnitType::TIMES_ONE:
         return ' ';
-    case SiUnitType::MILLI:
+    case UnitType::MILLI:
         return 'm';
-    case SiUnitType::MICRO:
+    case UnitType::MICRO:
         return 'u';
-    case SiUnitType::NANO:
+    case UnitType::NANO:
         return 'n';
-    case SiUnitType::PICO:
+    case UnitType::PICO:
         return 'p';
-    case SiUnitType::FEMTO:
+    case UnitType::FEMTO:
         return 'f';
     default:
         return '?';
     }
 }
+
+} // namespace si

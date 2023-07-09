@@ -1,10 +1,11 @@
 #if !defined(ENV_NATIVE)
-#include <Arduino.h>
+    #include <Arduino.h>
 #else
 #endif
 #include "../../lib/settings/ConstrainedNumericValue.hpp"
 #include <unity.h>
 
+using namespace settings;
 
 void test_constrained_numeric_value_in_range_01()
 {

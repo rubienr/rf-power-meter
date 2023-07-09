@@ -1,5 +1,8 @@
 #include "AD7887.h"
 
+namespace ad7887
+{
+
 AD7887::AD7887(const ControlRegister &ctrlRegister,
                void (*chipSelectDigitalWrite)(uint8_t),
                void (*clkDigitalWrite)(uint8_t),
@@ -58,3 +61,5 @@ void AD7887::updateControlRegister(const ControlRegister &newFlags)
 }
 
 const ControlRegister &AD7887::getControlRegister() const { return transmissionData.asUint16ControlRegister.controlRegister; }
+
+} // namespace ad7887

@@ -1,7 +1,6 @@
 #include "pb_encoder.h"
 #if defined(HAS_ENCODER)
 
-
 static void onRisingSignalA()
 {
     const bool signalA{ 0 != digitalRead(ENCODER_SIGNAL_A_PIN) };

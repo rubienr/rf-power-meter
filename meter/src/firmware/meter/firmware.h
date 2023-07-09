@@ -22,8 +22,8 @@ protected:
 #endif // POWER_OFF_FEATURE || AUTO_POWER_OFF_FEATURE
     [[noreturn]] void doHalt();
 
-    static void logLoadSettings(const StorageLoadResult &result);
-    static void logStoreSettings(const StorageStoreResult &result);
+    static void logLoadSettings(const storage::LoadResult &result);
+    static void logStoreSettings(const storage::StoreResult &result);
 
 #if defined(ACTIVITY_LED)
     bool toggleActivityLed();

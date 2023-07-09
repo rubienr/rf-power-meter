@@ -1,8 +1,9 @@
 #include "firmware.h"
-#include "../lib/settings/log_settings.hpp"
+#include "../lib/settings/LogSettings.hpp"
 #if defined(HAS_DATA_SINK_I2C)
     #include "data_sink/DataSinkRegisters.h"
     #include <Wire.h>
+    #include <math.h>
 #endif // HAS_DATA_SINK_I2C
 
 #if defined(HAS_DATA_SINK_I2C)
@@ -61,7 +62,7 @@ void Firmware::setup()
     operatingState.switchMode(OperatingModeType::Operational);
 }
 
-void Firmware::logLoadSettings(const StorageLoadResult &result)
+void Firmware::logLoadSettings(const storage::LoadResult &result)
 {
     if(result.loaded_crc_mismatch == 1) Serial.println(F("#W loaded settings from EEPROM: CRC mismatch"));
     if(result.loaded_version_mismatch == 1) Serial.println(F("#W loaded settings from EEPROM: version mismatch"));
@@ -78,7 +79,7 @@ void Firmware::logLoadSettings(const StorageLoadResult &result)
     else Serial.println(F("#I settings loaded successfully from EEPROM"));
 }
 
-void Firmware::logStoreSettings(const StorageStoreResult &result)
+void Firmware::logStoreSettings(const storage::StoreResult &result)
 {
     if(result.stored == 1) Serial.println(F("#I settings successfully stored to EEPROM"));
     if(result.loaded_crc_mismatch_after_storing == 1) Serial.println(F("#F stored and reloaded settings have CRC error"));
@@ -149,8 +150,10 @@ void Firmware::doSamplePowerMeter()
 {
 #if !defined(AD7887_SUBSEQUENT_READ_ERRORS)
     probe.device.readSample(probe.sampleRegister);
-    uiData.probe.sample = probe.sampleRegister.data;
-#else  // AD7887_SUBSEQUENT_READ_ERRORS
+    #if defined(HAS_DISPLAY)
+    uiData.probe.rawSample = probe.sampleRegister.data;
+    #endif // HAS_DISPLAY
+#else      // AD7887_SUBSEQUENT_READ_ERRORS
     bool success{ probe.device.readSample(probe.sampleRegister) };
     static uint8_t subsequentReadErrors{ 0 };
 
@@ -169,7 +172,7 @@ void Firmware::doSamplePowerMeter()
         Serial.println(F(")"));
     }
     else { subsequentReadErrors = 0; }
-#endif // AD7887_SUBSEQUENT_READ_ERRORS
+#endif     // AD7887_SUBSEQUENT_READ_ERRORS
 
 #if defined(AD7887_SUBSEQUENT_ZERO_SAMPLES)
     static uint8_t subsequentZeroSamples{ 0 };
@@ -188,17 +191,27 @@ void Firmware::doSamplePowerMeter()
     }
     else { subsequentZeroSamples = 0; }
 #endif // AD7887_SUBSEQUENT_ZERO_SAMPLES
+    float dbMilliW;
+    float watt;
+    UnitType wattScale;
+    probe.converter.convertDbMilliWatt(probe.sampleRegister.data, dbMilliW);
+    probe.converter.convertWatt(dbMilliW, watt, wattScale);
 
-    probe.converter.convertDbMilliWatt(probe.sampleRegister.data, uiData.probe.dbmW);
-    probe.converter.convertWatt(uiData.probe.dbmW, uiData.probe.watt, uiData.probe.si);
+#if defined(HAS_DISPLAY)
+    uiData.probe.rawSample = probe.sampleRegister.data;
+    uiData.probe.dbMilliW = dbMilliW;
+    uiData.probe.watt = watt;
+    uiData.probe.wattScale = wattScale;
+#endif // HAS_DISPLAY
+
     Serial.print(F(R"({ "sample" : { "raw" : ")"));
     Serial.print(probe.sampleRegister.data);
     Serial.print(F(R"(", "dBmW" : ")"));
-    Serial.print(uiData.probe.dbmW);
+    Serial.print(dbMilliW);
     Serial.print(F(R"(", "W" : { "w" : ")"));
-    Serial.print(uiData.probe.watt);
+    Serial.print(watt);
     Serial.print(F(R"(", "siUnit" : ")"));
-    Serial.print(siUnitTypeToStr(uiData.probe.si));
+    Serial.print(si::unitTypeToStr(wattScale));
 
     Serial.println(F("\" } } }"));
 
@@ -206,7 +219,7 @@ void Firmware::doSamplePowerMeter()
     // todo refactoring
     Wire.beginTransmission(DATA_SINK_I2C_ADDRESS);
     Wire.write(registerAddressToUnderlyingType(RegisterAddress::PowerSampleDbmW));
-    Data data{ .asFloat = uiData.probe.dbmW };
+    Data data{ .asFloat = dbMilliW };
     Wire.write(data.asBytes.lowByte);
     Wire.write(data.asBytes.highByte);
     Wire.write(data.asBytes.xLowByte);
@@ -215,11 +228,9 @@ void Firmware::doSamplePowerMeter()
 
     Wire.beginTransmission(DATA_SINK_I2C_ADDRESS);
     Wire.write(registerAddressToUnderlyingType(RegisterAddress::TemperatureK));
-    data.asFloat = uiData.temperature.kelvin;
+    data.asUint16 = probe.temperature.kelvin_em2;
     Wire.write(data.asBytes.lowByte);
     Wire.write(data.asBytes.highByte);
-    Wire.write(data.asBytes.xLowByte);
-    Wire.write(data.asBytes.xHighByte);
     Wire.endTransmission(true);
 #endif // HAS_DATA_SINK_I2C
     timers.sampleMs = 0;
@@ -245,19 +256,30 @@ void Firmware::doRender()
 #if defined(AD8318_TEMPERATURE_FEATURE)
 void Firmware::doSampleTemperature()
 {
-    uiData.temperature.rawTemp10Bit = analogRead(AD8318_TEMPERATURE_PIN);
-    uiData.temperature.milliVolt =
-    (uiData.temperature.rawTemp10Bit / (1024.0f - 1) * 1000 * static_cast<float>(AD8318_TEMPERATURE_REF_VOLTAGE));
-    uiData.temperature.kelvin = uiData.temperature.milliVolt / static_cast<float>(AD8318_TEMPERATURE_MILLI_VOLT_KELVIN);
-    uiData.temperature.celsius = uiData.temperature.kelvin - 273.15f;
+    probe.temperature.rawSample10Bit = analogRead(AD8318_TEMPERATURE_PIN);
+    probe.temperature.volt_em4 =
+    static_cast<uint16_t>(roundf(static_cast<float>(probe.temperature.rawSample10Bit) *
+                                 static_cast<float>(AD8318_TEMPERATURE_REF_VOLTAGE) * (10000.0f / (1024.0f - 1.0f))));
+    probe.temperature.kelvin_em2 = static_cast<uint16_t>(
+    roundf((static_cast<float>(probe.temperature.volt_em4) * 10.0f) / static_cast<float>(AD8318_TEMPERATURE_MILLI_VOLT_KELVIN)));
+    probe.temperature.celsius_em2 = static_cast<int16_t>(probe.temperature.kelvin_em2) - 27315;
 
-    Serial.print(F(R"({ "temp" : { "mV" : ")"));
-    Serial.print(uiData.temperature.milliVolt);
-    Serial.print(F(R"(", "K" : ")"));
-    Serial.print(uiData.temperature.kelvin);
-    Serial.print(F(R"(", "C" : ")"));
-    Serial.print(uiData.temperature.celsius);
-    Serial.println(F("\" } } "));
+    #if defined(HAS_DISPLAY)
+    uiData.temperature.rawTemp10Bit = probe.temperature.rawSample10Bit;
+    uiData.temperature.volt_em4 = probe.temperature.volt_em4;
+    uiData.temperature.kelvin_em2 = probe.temperature.kelvin_em2;
+    uiData.temperature.celsius_em2 = probe.temperature.celsius_em2;
+    #endif // HAS_DISPLAY
+
+    Serial.print(F(R"({ "temp" : { "raw" : ")"));
+    Serial.print(probe.temperature.rawSample10Bit);
+    Serial.print(F(R"(", "V" : ")"));
+    Serial.print(probe.temperature.volt_em4);
+    Serial.print(F(R"(e-4", "K" : ")"));
+    Serial.print(probe.temperature.kelvin_em2);
+    Serial.print(F(R"(e-2", "C" : ")"));
+    Serial.print(probe.temperature.celsius_em2);
+    Serial.println(F("e-2\" } } "));
 
     timers.temperatureMs = 0;
 }

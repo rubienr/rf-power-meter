@@ -15,6 +15,8 @@ struct Stream
 };
 #endif
 
+namespace settings
+{
 
 template <const char *indent> struct _LogSettings
 {
@@ -126,3 +128,5 @@ template <const char *indent> struct _LogSettings
 
 const char _indent2[]{ "  " };
 using LogSettings = _LogSettings<_indent2>;
+
+} // namespace settings

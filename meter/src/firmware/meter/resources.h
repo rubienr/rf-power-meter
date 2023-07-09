@@ -10,13 +10,18 @@
 #include "../lib/storage/SettingsStorage.hpp"
 #include "elapsedMillis.h"
 #include "states/OperatingState.h"
-#include "ui/Display.h"
-#include "ui/UiData.h"
-#include "ui/UiRenderer.h"
+#include "ui/display/Display.h"
+#include "ui/renderer/UiData.h"
+#include "ui/renderer/UiRenderer.h"
 #include <Arduino.h>
 #include <HardwareSerial.h>
 
 extern const float kValuesSets[6][4] PROGMEM;
+
+using namespace settings;
+using namespace storage;
+using namespace ad8138;
+using namespace ad7887;
 
 void clkDigitalWrite(uint8_t digitalValue);
 void chipSelectDigitalWrite(uint8_t digitalValue);
@@ -34,13 +39,14 @@ struct Resources
     struct
     {
         Settings parameters{};
-        SettingsStorage<EepromStorageDevice<Settings>> storage{};
+        SettingsStorage<EepromDevice<Settings>> storage{};
     } settings{};
 
+#if defined(HAS_DISPLAY)
     UiData uiData{ .uiContext = CurrentUiContext::Default,
-                   .probe = { .sample = 0, .dbmW = 0, .watt = 0, .si = SiUnitType::FEMTO },
+                   .probe = { .rawSample = 0, .dbMilliW = 0, .watt = 0, .wattScale = UnitType::FEMTO },
                    .temperature = { 0, 0, 0 } };
-
+#endif // HAS_DISPLAY
 
 #if defined(HAS_DISPLAY)
     display_t display DISPLAY_INITIALIZER_LIST;
@@ -58,10 +64,18 @@ struct Resources
                                      .mustBeZero2 = 0,
                                      .dontCare = 0 };
         AD7887 device{ ctlRegister, chipSelectDigitalWrite, clkDigitalWrite, dataDigitalWrite, dataDigitalRead, delayMicroseconds };
-        SampleRegister sampleRegister{ .data = 0, .zero = 0 };
+        ad7887::SampleRegister sampleRegister{ .data = 0, .zero = 0 };
 
         KValues3rdOrderFloat kValues{};
         AD8138Converter3rdOrder converter{ kValues };
+
+        struct
+        {
+            uint16_t rawSample10Bit{ 0 };
+            uint16_t volt_em4{ 0 };
+            uint16_t kelvin_em2{ 0 };
+            int16_t celsius_em2{ 0 };
+        } temperature;
     } probe{};
 
     struct

@@ -1,6 +1,7 @@
-#include "ui/parallel_8bit/UiRendererTftShieldV3.h"
+#include "../../display/Display.h"
+#include "../UiData.h"
+#include "../UiRenderer.h"
 #include "states/OperatingState.h"
-#include "ui/UiData.h"
 #include <MCUFRIEND_kbv.h>
 
 
@@ -30,13 +31,15 @@ void UiRenderer::render()
     display.print(" OPS=");
     display.print(static_cast<uint8_t>(operatingState.getMode()));
 
-    display.print(" TEMP=");
-    display.print(data.temperature.kelvin);
-    display.println("C");
+    display.print(" T=");
+    display.print(data.temperature.celsius_em2 / 100);
+    display.print('.');
+    display.print((data.temperature.celsius_em2 % 100) / 10);
+    display.println("C   ");
 
     display.setTextSize(5);
     display.println();
-    display.print(data.probe.dbmW);
+    display.print(data.probe.dbMilliW);
     display.setTextSize(2);
     display.println(" dBmW");
     display.setTextSize(5);
@@ -46,6 +49,6 @@ void UiRenderer::render()
     display.print(data.probe.watt);
     display.setTextSize(2);
     display.print(' ');
-    display.print(siUnitTypeToStr(data.probe.si));
+    display.print(si::unitTypeToStr(data.probe.wattScale));
     display.println("W");
 }

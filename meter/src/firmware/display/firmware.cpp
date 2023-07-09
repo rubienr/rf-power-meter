@@ -76,15 +76,19 @@ void Firmware::doRender()
 #if defined(ACTIVITY_LED)
     toggleActivityLed();
 #endif // ACTIVITY_LED
-    uiData.probe.dbmW = sink.memory.asRegisters.powerSampleDb.asValue;
-    uiData.temperature.kelvin = sink.memory.asRegisters.temperatureK.asValue;
-
+    cli();
+    uiData.probe.dbMilliW = sink.memory.asRegisters.powerSampleDbMilliW.asValue;
+    uiData.temperature.kelvin_em2 = sink.memory.asRegisters.temperatureK.asValue_em2;
+    sei();
+    uiData.temperature.celsius_em2 = static_cast<int16_t>(uiData.temperature.kelvin_em2) - 27315;
+    cli();
     if(sink.memory.asRegisters.powerControl.asValue.initDisplay)
     {
         sink.memory.asRegisters.powerControl.asValue.initDisplay = 0;
         Serial.println("#I master requested 'init display'");
         renderer.init();
     }
+    sei();
     renderer.render();
 }
 

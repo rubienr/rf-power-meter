@@ -35,9 +35,8 @@ enum class OperatingModeType : uint8_t
 
 const char *operatingModeTypeToStr(OperatingModeType t);
 
-class OperatingState
+struct OperatingState
 {
-public:
     void switchMode(const OperatingModeType &next);
 
     const OperatingModeType &getMode() { return mode; }

@@ -8,6 +8,8 @@
 #include <inttypes.h>
 #include <unity.h>
 
+using namespace ad7887;
+
 uint16_t controlRegisterOnAd7887{ 0 };
 uint16_t sampleRegisterOnAd7887{ 0 };
 

@@ -1,5 +1,7 @@
 #pragma once
 
+namespace settings
+{
 
 template <typename T, T defaultValue, T minValue, T maxValue> struct ConstrainedNumericValue
 {
@@ -21,3 +23,5 @@ protected:
     T value{ defaultValue };
 
 } __attribute__((__packed__));
+
+} // namespace settings

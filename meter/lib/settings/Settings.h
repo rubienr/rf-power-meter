@@ -6,6 +6,7 @@
 
 namespace settings
 {
+
 struct Version
 {
     Version &operator=(const Version &) = default;

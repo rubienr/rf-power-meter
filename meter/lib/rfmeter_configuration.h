@@ -3,17 +3,17 @@
 // ----- section: version
 
 #if defined(POWER_METER)
-    #define VERSION_MAJOR 0
-    #define VERSION_MINOR 0
-    #define VERSION_PATCH 2
+    #define VERSION_MAJOR 0u
+    #define VERSION_MINOR 0u
+    #define VERSION_PATCH 2u
 #elif defined(OFFBOARD_DISPLAY)
-    #define VERSION_MAJOR 0
-    #define VERSION_MINOR 0
-    #define VERSION_PATCH 1
+    #define VERSION_MAJOR 0u
+    #define VERSION_MINOR 0u
+    #define VERSION_PATCH 1u
 #elif defined(ENV_NATIVE)
-    #define VERSION_MAJOR 0
-    #define VERSION_MINOR 0
-    #define VERSION_PATCH 0
+    #define VERSION_MAJOR 0u
+    #define VERSION_MINOR 0u
+    #define VERSION_PATCH 0u
 else
     #error
 #endif
@@ -21,9 +21,9 @@ else
 // ----- section: probe sampling
 
 #if defined(POWER_METER)
-    #define SAMPLE_TIMER_MS_DEFAULT 50
-    #define SAMPLE_TIMER_MS_MAX     1000
-    #define SAMPLE_TIMER_MS_MIN     30
+    #define SAMPLE_TIMER_MS_DEFAULT 50u
+    #define SAMPLE_TIMER_MS_MAX     1000u
+    #define SAMPLE_TIMER_MS_MIN     30u
 #endif // POWER_METER
 
 // ----- section: serial
@@ -74,9 +74,9 @@ else
 
 #if defined(DISPLAY_FEATURE) || defined(OFFBOARD_DISPLAY)
     #define HAS_DISPLAY
-    #define RENDER_TIMER_MS_DEFAULT 250
-    #define RENDER_TIMER_MS_MAX     1000 // config storage: max
-    #define RENDER_TIMER_MS_MIN     100  // config storage: min
+    #define RENDER_TIMER_MS_DEFAULT 250u
+    #define RENDER_TIMER_MS_MAX     1000u // config storage: max
+    #define RENDER_TIMER_MS_MIN     100u  // config storage: min
 
     #if defined(DISPLAY_I2C)
         #define OLED_RST U8X8_PIN_NONE
@@ -87,7 +87,7 @@ else
                 OLED_RST, OLED_SCL, OLED_SDA \
             }
     #elif defined(DISPLAY_PARALLEL_8BIT)
-        #define TFT_EXPECTED_ID 0x8230
+        #define TFT_EXPECTED_ID 0x8230u
         #define TFT_LCD_RESET   A4
         #define TFT_LCD_CS      A3
         #define TFT_LCD_CD      A2
@@ -106,11 +106,11 @@ else
 
 #if defined(OFFBOARD_DISPLAY) || (defined(POWER_METER) && !defined(DISPLAY_FEATURE))
     #define HAS_DATA_SINK_I2C
-    #define DATA_SINK_TIMER_MS_DEFAULT 50
-    #define DATA_SINK_TIMER_MS_MAX     1000
-    #define DATA_SINK_TIMER_MS_MIN     30
+    #define DATA_SINK_TIMER_MS_DEFAULT 50u
+    #define DATA_SINK_TIMER_MS_MAX     1000u
+    #define DATA_SINK_TIMER_MS_MIN     30u
 
-    #define DATA_SINK_I2C_ADDRESS      ((uint8_t)0x18U) // address of data consumer
+    #define DATA_SINK_I2C_ADDRESS      ((uint8_t)0x18u) // address of data consumer
     #if defined(ARDUINO_AVR_UNO)                        // mcu=atmega328p
         #define DATA_SINK_I2C_SCL PIN_WIRE_SCL
         #define DATA_SINK_I2C_SDA PIN_WIRE_SDA
@@ -139,7 +139,7 @@ else
 // ----- section: EEPROM settings storage
 
 #if defined(POWER_METER)
-    #define EEPROM_START_ADDRESS 0x0 // move the start address if EEPROM is broken to avoid damaged segments
+    #define EEPROM_START_ADDRESS 0x0u // move the start address if EEPROM is broken to avoid damaged segments
     // #define EEPROM_RESET_PIN_FEATURE     // enable/disable manual EEPROM reset feature
     #if defined(EEPROM_RESET_PIN_FEATURE)
         #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_LEONARDO)
@@ -149,10 +149,10 @@ else
         #else
             #error
         #endif
-        #define EEPROM_RESET_PIN_TRIGGER_LEVEL LOW // input level that triggers reset
-        #define EEPROM_RESET_PIN_DELAY_MS      250 // milliseconds delay from pin being "released" to power off
-    #endif                                         // EEPROM_RESET_PIN_FEATURE
-#endif                                             // POWER_METER
+        #define EEPROM_RESET_PIN_TRIGGER_LEVEL LOW  // input level that triggers reset
+        #define EEPROM_RESET_PIN_DELAY_MS      250u // milliseconds delay from pin being "released" to power off
+    #endif                                          // EEPROM_RESET_PIN_FEATURE
+#endif                                              // POWER_METER
 
 // ----- section: data acquisition and conversion
 
@@ -194,62 +194,62 @@ else
     #define AD7887_T6_DELAY_US 1 // min 0.4*t_sclk; clock high pulse width; comment out to disable
     #define AD7887_T7_DELAY_US 1 // min 0.4*t_sclk; clock low pulse width; comment out to disable
 
-// #define AD7887_SUBSEQUENT_READ_ERRORS 3 // maximum allowed read errors before op-mode switches to error mode; comment to disable
-// #define AD7887_SUBSEQUENT_ZERO_SAMPLES 3 // maximum allowed 0x000-valued samples before op-mode switches to error mode; comment to disable
+// #define AD7887_SUBSEQUENT_READ_ERRORS 3u // maximum allowed read errors before op-mode switches to error mode; comment to disable
+// #define AD7887_SUBSEQUENT_ZERO_SAMPLES 3u // maximum allowed 0x000-valued samples before op-mode switches to error mode; comment to disable
 
 // ----- section: AD8318 (1 MHz to 8 GHz, 70 dB Logarithmic Detector/Controller)
 
     #define AD8318_TEMPERATURE_FEATURE
     #if defined(AD8318_TEMPERATURE_FEATURE)
-        #define AD8318_TEMPERATURE_SAMPLE_MS     1000 // separation in between temperature measurements
-        #define AD8318_TEMPERATURE_SAMPLE_MS_MIN 500  // min configurable separation
-        #define AD8318_TEMPERATURE_SAMPLE_MS_MAX 5000 // max configurable separation
+        #define AD8318_TEMPERATURE_SAMPLE_MS     1000u // separation in between temperature measurements
+        #define AD8318_TEMPERATURE_SAMPLE_MS_MIN 500u  // min configurable separation
+        #define AD8318_TEMPERATURE_SAMPLE_MS_MAX 5000u // max configurable separation
         #if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_LEONARDO)
-            #define AD8318_TEMPERATURE_PIN A0         // TEMP - J2, pin 4; analog temperature out from AD8318
+            #define AD8318_TEMPERATURE_PIN A0          // TEMP - J2, pin 4; analog temperature out from AD8318
         #elif defined(ARDUINO_AVR_MEGA2560)
-            #define AD8318_TEMPERATURE_PIN A15        // TEMP - J2, pin 4; analog temperature out from AD8318
+            #define AD8318_TEMPERATURE_PIN A15         // TEMP - J2, pin 4; analog temperature out from AD8318
         #elif defined(ARDUINO_AVR_MICRO)
-            #define AD8318_TEMPERATURE_PIN A5         // TEMP - J2, pin 4; analog temperature out from AD8318
+            #define AD8318_TEMPERATURE_PIN A5          // TEMP - J2, pin 4; analog temperature out from AD8318
         #elif defined(ARDUINO_AVR_NANO)
-            #define AD8318_TEMPERATURE_PIN A0         // TEMP - J2, pin 4; analog temperature out from AD8318
+            #define AD8318_TEMPERATURE_PIN A0          // TEMP - J2, pin 4; analog temperature out from AD8318
         #elif defined(ENV_NATIVE)
         #else
             #error
         #endif
-        #define AD8318_TEMPERATURE_MILLI_VOLT_KELVIN 2.0 // 2mV/°K; about 600mV at 27°C (273.15°K+27°K)
+        #define AD8318_TEMPERATURE_MILLI_VOLT_KELVIN 2.0f // 2mV/°K; about 600mV at 27°C (273.15°K+27°K)
 
         // see:
         // -`analogReference()`
         // - https://reference.arduino.cc/reference/en/language/functions/analog-io/analogreference/
         #if defined(ARDUINO_AVR_UNO)                        // mcu=atmega328p
             #define AD8318_TEMPERATURE_REF_CONFIG  EXTERNAL // default: INTERNAL; the 1.1V ref. may not be as accurate as expected
-            #define AD8318_TEMPERATURE_REF_VOLTAGE 3.3      // default: 1.1
+            #define AD8318_TEMPERATURE_REF_VOLTAGE 3.3f     // default: 1.1
         #elif defined(ARDUINO_AVR_MEGA2560)                 // mcu=atmega2560
             #define AD8318_TEMPERATURE_REF_CONFIG  INTERNAL1V1 // default: INTERNAL1V1
-            #define AD8318_TEMPERATURE_REF_VOLTAGE 1.1         // default: 1.1
+            #define AD8318_TEMPERATURE_REF_VOLTAGE 1.1f        // default: 1.1
         #elif defined(ARDUINO_AVR_LEONARDO)                    // mcu=atmega32u4
             #define AD8318_TEMPERATURE_REF_CONFIG  INTERNAL    // default: INTERNAL
-            #define AD8318_TEMPERATURE_REF_VOLTAGE 2.56        // default: 2.56
+            #define AD8318_TEMPERATURE_REF_VOLTAGE 2.56f       // default: 2.56
         #elif defined(ARDUINO_AVR_MICRO)                       // mcu=atmega32u4
             #define AD8318_TEMPERATURE_REF_CONFIG  INTERNAL    // default: INTERNAL
-            #define AD8318_TEMPERATURE_REF_VOLTAGE 1.1         // default: 1.1
+            #define AD8318_TEMPERATURE_REF_VOLTAGE 1.1f        // default: 1.1
         #elif defined(ARDUINO_AVR_NANO)                        // mcu=atmega328p or mcu=atmega328pb
             #define AD8318_TEMPERATURE_REF_CONFIG  INTERNAL    // default: INTERNAL
-            #define AD8318_TEMPERATURE_REF_VOLTAGE 1.1         // default: 1.1
+            #define AD8318_TEMPERATURE_REF_VOLTAGE 1.1f        // default: 1.1
         #elif defined(ENV_NATIVE)                              // unit test build
         #else
             #error
         #endif
-    #endif                                         // AD8318_TEMPERATURE_FEATURE
+    #endif                                          // AD8318_TEMPERATURE_FEATURE
 
-    #define AD8318_CALIBRATION_FREQUENCY_MIN     0 // min index in AD8318_CALIBRATION_FACTORS
-    #define AD8318_CALIBRATION_FREQUENCY_MAX     5 // max index in AD8318_CALIBRATION_FACTORS
-    #define AD8318_CALIBRATION_FREQUENCY_DEFAULT 1 // default index in AD8318_CALIBRATION_FACTORS
+    #define AD8318_CALIBRATION_FREQUENCY_MIN     0u // min index in AD8318_CALIBRATION_FACTORS
+    #define AD8318_CALIBRATION_FREQUENCY_MAX     5u // max index in AD8318_CALIBRATION_FACTORS
+    #define AD8318_CALIBRATION_FREQUENCY_DEFAULT 1u // default index in AD8318_CALIBRATION_FACTORS
 
     // frequencies that have calibration sets in AD8318_CALIBRATION_FACTORS
-    #define AD8318_CALIBRATION_FREQUENCY_MHZ \
-        {                                    \
-            50, 145, 433, 1000, 2000, 3000   \
+    #define AD8318_CALIBRATION_FREQUENCY_MHZ     \
+        {                                        \
+            50u, 145u, 433u, 1000u, 2000u, 3000u \
         }
 
     // Calibration factors layout - AD8318_CALIBRATION_FACTORS
@@ -280,22 +280,22 @@ else
     // #define POWER_OFF_FEATURE                         // enable/disable shutdown feature
     #if defined(POWER_OFF_FEATURE)
         // ----- section: power off
-        #define POWER_OFF_SENSE_PIN               7   // input pin that triggers power off
-        #define POWER_OFF_SENSE_PIN_TRIGGER_LEVEL LOW // input level that triggers power off
-        #define POWER_OFF_SENSE_PIN_DELAY_MS      250 // milliseconds delay from pin being "released" to power off
-        #define POWER_OFF_PIN                     8   // output pin to disrupt power via external hardware
+        #define POWER_OFF_SENSE_PIN               7    // input pin that triggers power off
+        #define POWER_OFF_SENSE_PIN_TRIGGER_LEVEL LOW  // input level that triggers power off
+        #define POWER_OFF_SENSE_PIN_DELAY_MS      250u // milliseconds delay from pin being "released" to power off
+        #define POWER_OFF_PIN                     8    // output pin to disrupt power via external hardware
         #define POWER_OFF_PIN_ACTIVE \
-            LOW                                       // LOW: pin goes from high to low on timeout
-                                                      // HIGH: pin goes low high to high on timeout
+            LOW                                        // LOW: pin goes from high to low on timeout
+                                                       // HIGH: pin goes low high to high on timeout
 
         // ----- section: auto power off
         // #define AUTO_POWER_OFF_FEATURE // enable/disable auto shutdown feature
         #if defined(AUTO_POWER_OFF_FEATURE)
-            #define AUTO_POWER_OFF_SEC 300 // delay until power off if no interaction, comment out to disable feature
+            #define AUTO_POWER_OFF_SEC 300u // delay until power off if no interaction, comment out to disable feature
         #endif
-    #endif                                 // POWER_OFF_FEATURE
+    #endif                                  // POWER_OFF_FEATURE
 
-#endif                                     // POWER_METER
+#endif                                      // POWER_METER
 
 
 // ----- section: sanity checks

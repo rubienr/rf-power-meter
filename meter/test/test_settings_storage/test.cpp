@@ -9,6 +9,7 @@
 #include <unity.h>
 
 using namespace settings;
+using namespace storage;
 
 struct DummyConstLoadStorageDeviceCrcOk
 {
@@ -91,7 +92,7 @@ struct DummyStoreStorageDevicePayloadMismatch
     }
 };
 
-using DummySettingsLoadStorage = SettingsStorage<DummyStorageDevice<Settings>>;
+using DummySettingsLoadStorage = SettingsStorage<DummyDevice<Settings>>;
 using DummySettingsLoadConstStorageCrcOk = SettingsStorage<DummyConstLoadStorageDeviceCrcOk>;
 using DummySettingsLoadConstStorageCrcFail = SettingsStorage<DummyConstLoadStorageDeviceCrcFail>;
 using DummySettingsLoadConstStorageVersionMismatch = SettingsStorage<DummyConstLoadStorageDeviceVersionMismatch>;
@@ -146,7 +147,7 @@ void test_load_or_init_crc_ok()
     a.sample.separation_ms = 123;
 
     DummySettingsLoadConstStorageCrcOk storage;
-    StorageLoadResult result = storage.loadOrInit(a);
+    LoadResult result = storage.loadOrInit(a);
 
     TEST_ASSERT_EQUAL(100, a.sample.separation_ms.get());
     TEST_ASSERT_EQUAL(1, result.loaded);

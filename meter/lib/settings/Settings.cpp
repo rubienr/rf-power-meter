@@ -3,6 +3,7 @@
     #include "../crc/crc.h"
 namespace settings
 {
+
 const uint8_t *Settings::asPtr() const { return reinterpret_cast<const uint8_t *>(this); }
 
 bool Version::operator==(const Version &other) const
@@ -34,7 +35,7 @@ bool Settings::operator==(const Settings &other) const
            sample == other.sample && crc == other.crc;
 }
 
-uint32_t Settings::computeCrc() const { return ::computeCrc(asPtr(), sizeof(Settings) - sizeof(crc)); }
+uint32_t Settings::computeCrc() const { return ::Crc_compute(asPtr(), sizeof(Settings) - sizeof(crc)); }
 
 bool Settings::checkCrc() const { return crc == computeCrc(); }
 

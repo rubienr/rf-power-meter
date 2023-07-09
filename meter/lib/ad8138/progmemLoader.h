@@ -7,6 +7,9 @@ pgm_read_float_near(float *) {}
 
 #include "KValues3rdOrder.hpp"
 
+namespace ad8138
+{
+
 template <typename T> struct KValues3rdOrderLoader
 {
     static void load(const T *progMemAddress, KValues3rdOrder<T> &kValues)
@@ -17,3 +20,5 @@ template <typename T> struct KValues3rdOrderLoader
         kValues.k3 = pgm_read_float_near(&progMemAddress[3]);
     }
 };
+
+} // namespace ad8138
