@@ -33,6 +33,37 @@ else
 #endif                                  // SERIAL_BAUD_RATE
 #define SERIAL_LOG_CONN_MODE SERIAL_8N1
 
+// ----- section: push-button encoder (2 encoder signals + 1 push button signals)
+
+#define ENCODER_FEATURE
+#if defined(ENCODER_FEATURE)
+    #define HAS_ENCODER
+    #if defined(ARDUINO_AVR_UNO)          // mcu=atmega328p
+        #define ENCODER_PUSHBUTTON_PIN 11 // interrupt capable pin
+        #define ENCODER_SIGNAL_A_PIN   10 // interrupt capable pin
+        #define ENCODER_SIGNAL_B_PIN   9  // digital pin
+    #elif defined(ARDUINO_AVR_MEGA2560)   // mcu=atmega2560
+        #define ENCODER_PUSHBUTTON_PIN 13 // interrupt capable pin
+        #define ENCODER_SIGNAL_A_PIN   12 // interrupt capable pin
+        #define ENCODER_SIGNAL_B_PIN   11 // digital pin
+    #elif defined(ARDUINO_AVR_LEONARDO)   // mcu=atmega32u4
+        #define ENCODER_PUSHBUTTON_PIN 11 // interrupt capable pin
+        #define ENCODER_SIGNAL_A_PIN   10 // interrupt capable pin
+        #define ENCODER_SIGNAL_B_PIN   9  // digital pin
+    #elif defined(ARDUINO_AVR_MICRO)      // mcu=atmega32u4
+        #define ENCODER_PUSHBUTTON_PIN 2  // interrupt capable pin
+        #define ENCODER_SIGNAL_A_PIN   3  // interrupt capable pin
+        #define ENCODER_SIGNAL_B_PIN   4  // digital pin
+    #elif defined(ARDUINO_AVR_NANO)       // mcu=atmega328p or mcu=atmega328pb
+        #define ENCODER_PUSHBUTTON_PIN 2  // interrupt capable pin
+        #define ENCODER_SIGNAL_A_PIN   3  // interrupt capable pin
+        #define ENCODER_SIGNAL_B_PIN   4  // digital pin
+    #elif defined(ENV_NATIVE)
+    #else
+        #error
+    #endif
+#endif // HAS_ENCODER
+
 // ----- section: display (on-board: connected to meter; off-board: dedicated controller)
 
 #if defined(POWER_METER) // on-board display: not recommended

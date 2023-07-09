@@ -2,6 +2,9 @@
 #include "../lib/ad7887/AD7887.h"
 #include "../lib/ad8138/AD8138.h"
 #include "../lib/ad8138/progmemLoader.h"
+#if defined(HAS_ENCODER)
+    #include "../lib/pb_encoder/pb_encoder.h"
+#endif // HAS_ENCODER
 #include "../lib/settings/Settings.h"
 #include "../lib/storage/EepromStorageDevice.hpp"
 #include "../lib/storage/SettingsStorage.hpp"
@@ -19,6 +22,10 @@ void clkDigitalWrite(uint8_t digitalValue);
 void chipSelectDigitalWrite(uint8_t digitalValue);
 void dataDigitalWrite(uint8_t digitalValue);
 int dataDigitalRead();
+
+#if defined(HAS_ENCODER)
+extern PbEncoder_Handle *pbEncoderHandle;
+#endif // HAS_ENCODER
 
 struct Resources
 {
@@ -73,4 +80,8 @@ struct Resources
         elapsedSeconds autoPowerOffSec{ 0 };
 #endif // AUTO_POWER_OFF_FEATURE
     } timers{};
+
+#if defined(HAS_ENCODER)
+    PbEncoder_Handle encoderHandle{ .counter = 0, .isPbPressed = 0 };
+#endif // HAS_ENCODER
 };

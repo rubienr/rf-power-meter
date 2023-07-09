@@ -44,6 +44,11 @@ void Firmware::setup()
         Serial.println(F("#I   - D=DEBUG, I=INFO, E=ERROR, F=FATAL"));
     }
 
+#if defined(HAS_ENCODER)
+    pbEncoderHandle = &encoderHandle;
+    PbEncoder_setup();
+#endif // HAS_ENCODER
+
     if(!initActivityLed()) return;
 #if defined(HAS_DISPLAY)
     if(!initDisplay()) return;
