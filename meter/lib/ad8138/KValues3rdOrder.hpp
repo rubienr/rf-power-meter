@@ -2,7 +2,7 @@
 #if !defined(ENV_NATIVE)
     #include <Arduino.h>
 #else
-pgm_read_float_near(float *) {}
+float pgm_read_float_near(float *) { return 0.0f; }
 #endif
 
 namespace ad8138

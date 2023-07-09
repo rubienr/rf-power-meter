@@ -5,6 +5,7 @@
 #if defined(HAS_ENCODER)
     #include "../lib/pb_encoder/pb_encoder.h"
 #endif // HAS_ENCODER
+#include "../lib/average/Average.h"
 #include "../lib/settings/Settings.h"
 #include "../lib/storage/EepromStorageDevice.hpp"
 #include "../lib/storage/SettingsStorage.hpp"
@@ -44,7 +45,7 @@ struct Resources
 
 #if defined(HAS_DISPLAY)
     UiData uiData{.uiContext = CurrentUiContext::Default,
-                  .probe = {.rawSample = 0, .dbMilliW = 0, .watt = 0, .wattScale = UnitType::FEMTO},
+                  .probe = {.rawSample12Bit = 0, .rawAverage12Bit = 0, .dbMilliW = 0, .watt = 0, .wattScale = UnitType::FEMTO},
                   .temperature = {0, 0, 0}};
 #endif // HAS_DISPLAY
 
@@ -64,8 +65,8 @@ struct Resources
                                     .mustBeZero2 = 0,
                                     .dontCare = 0};
         AD7887 device{ctlRegister, chipSelectDigitalWrite, clkDigitalWrite, dataDigitalWrite, dataDigitalRead, delayMicroseconds};
-        ad7887::SampleRegister sampleRegister{.data = 0, .zero = 0};
-
+        ad7887::SampleRegister sampleRegister{.raw12Bit = 0, .zero = 0};
+        avg::Average32x16 sampleAverage;
         KValues3rdOrderFloat kValues{};
         AD8138Converter3rdOrder converter{kValues};
 

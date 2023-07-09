@@ -22,6 +22,7 @@ AlignAfterOpenBracket: Align
 CompactNamespaces: false
 FixNamespaceComments: true
 NamespaceIndentation: None
+ShortNamespaceLines: 0
 SortUsingDeclarations: true
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializersBeforeComma: false

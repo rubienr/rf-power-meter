@@ -21,7 +21,8 @@ struct UiData
     CurrentUiContext uiContext{CurrentUiContext::Default};
     struct
     {
-        uint16_t rawSample{0};
+        uint16_t rawSample12Bit{0};
+        uint16_t rawAverage12Bit{0};
         float dbMilliW{0};
         float watt{0};
         UnitType wattScale{UnitType::TIMES_ONE};

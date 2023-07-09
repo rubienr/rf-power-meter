@@ -93,7 +93,7 @@ union TransmissionData
 
 struct SampleRegister
 {
-    uint16_t data : 12;
+    uint16_t raw12Bit : 12;
     uint16_t zero : 4;
 } __attribute__((__packed__));
 

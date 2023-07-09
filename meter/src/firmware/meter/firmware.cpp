@@ -150,8 +150,9 @@ void Firmware::doSamplePowerMeter()
 {
 #if !defined(AD7887_SUBSEQUENT_READ_ERRORS)
     probe.device.readSample(probe.sampleRegister);
+    probe.sampleAverage.put(probe.sampleRegister.raw12Bit);
     #if defined(HAS_DISPLAY)
-    uiData.probe.rawSample = probe.sampleRegister.data;
+    uiData.probe.rawSample12Bit = probe.sampleRegister.raw12Bit;
     #endif // HAS_DISPLAY
 #else      // AD7887_SUBSEQUENT_READ_ERRORS
     bool success{probe.device.readSample(probe.sampleRegister)};
@@ -194,18 +195,23 @@ void Firmware::doSamplePowerMeter()
     float dbMilliW;
     float watt;
     UnitType wattScale;
-    probe.converter.convertDbMilliWatt(probe.sampleRegister.data, dbMilliW);
+    probe.converter.convertDbMilliWatt(probe.sampleRegister.raw12Bit, dbMilliW);
     probe.converter.convertWatt(dbMilliW, watt, wattScale);
 
 #if defined(HAS_DISPLAY)
-    uiData.probe.rawSample = probe.sampleRegister.data;
+    uiData.probe.rawSample12Bit = probe.sampleRegister.raw12Bit;
+    probe.sampleAverage.get(uiData.probe.rawAverage12Bit);
     uiData.probe.dbMilliW = dbMilliW;
     uiData.probe.watt = watt;
     uiData.probe.wattScale = wattScale;
 #endif // HAS_DISPLAY
 
     Serial.print(F(R"({ "sample" : { "raw" : ")"));
-    Serial.print(probe.sampleRegister.data);
+    Serial.print(probe.sampleRegister.raw12Bit);
+    Serial.print(F(R"(", "raw~" : ")"));
+    avg::Average32x16::entry_type avg;
+    probe.sampleAverage.get(avg);
+    Serial.print(avg);
     Serial.print(F(R"(", "dBmW" : ")"));
     Serial.print(dbMilliW);
     Serial.print(F(R"(", "W" : { "w" : ")"));

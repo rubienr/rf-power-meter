@@ -13,7 +13,7 @@ struct Resources
     OperatingState operatingState{};
 
     UiData uiData{.uiContext = CurrentUiContext::Default,
-                  .probe = {.rawSample = 0, .dbMilliW = 0, .watt = 0, .wattScale = UnitType::FEMTO},
+                  .probe = {.rawSample12Bit = 0, .rawAverage12Bit = 0, .dbMilliW = 0, .watt = 0, .wattScale = UnitType::FEMTO},
                   .temperature = {0, 0, 0}};
 
     display_t display DISPLAY_INITIALIZER_LIST;

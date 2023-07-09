@@ -10,8 +10,8 @@
 
 using namespace ad7887;
 
-uint16_t controlRegisterOnAd7887{ 0 };
-uint16_t sampleRegisterOnAd7887{ 0 };
+uint16_t controlRegisterOnAd7887{0};
+uint16_t sampleRegisterOnAd7887{0};
 
 void delayMicroSeconds(unsigned int){};
 void chipSelectDigitalWrite(uint8_t) {}
@@ -19,7 +19,7 @@ void clkDigitalWrite(uint8_t) {}
 void controlDigitalWrite(uint8_t digitalValue)
 {
     // expect that data is provided from MSB to LSB in same order as AD7887 expects input data
-    static uint16_t currentDataBit{ 1 };
+    static uint16_t currentDataBit{1};
     controlRegisterOnAd7887 <<= 1;
     controlRegisterOnAd7887 |= digitalValue ? 1 : 0;
     currentDataBit <<= 1;
@@ -29,8 +29,8 @@ void controlDigitalWrite(uint8_t digitalValue)
 int sampleDataDigitalRead()
 {
     // read from MSB to LSB in the same order as AD7887 would send data
-    static uint16_t currentDataBit{ 0x8000 };
-    int data{ sampleRegisterOnAd7887 & currentDataBit ? 1 : 0 };
+    static uint16_t currentDataBit{0x8000};
+    int data{sampleRegisterOnAd7887 & currentDataBit ? 1 : 0};
     currentDataBit >>= 1;
     if(currentDataBit == 0) currentDataBit = 0x8000;
     return data;
@@ -91,7 +91,7 @@ void test_read_sample_register_01()
     SampleRegister sample;
 
     TEST_ASSERT(probe.readSample(sample));
-    TEST_ASSERT_EQUAL(0x0, sample.data);
+    TEST_ASSERT_EQUAL(0x0, sample.raw12Bit);
 }
 
 void test_read_sample_register_02()
@@ -104,7 +104,7 @@ void test_read_sample_register_02()
     SampleRegister sample;
 
     TEST_ASSERT(probe.readSample(sample));
-    TEST_ASSERT_EQUAL(0b0000000000000001, sample.data);
+    TEST_ASSERT_EQUAL(0b0000000000000001, sample.raw12Bit);
 }
 
 void test_read_sample_register_03()
@@ -117,7 +117,7 @@ void test_read_sample_register_03()
     SampleRegister sample;
 
     TEST_ASSERT(probe.readSample(sample));
-    TEST_ASSERT_EQUAL(0b0000111111111101, sample.data);
+    TEST_ASSERT_EQUAL(0b0000111111111101, sample.raw12Bit);
 }
 
 void test_read_sample_register_04()
@@ -169,7 +169,7 @@ void test_read_sample_write_control_register()
     bool success = probe.readSample(sample);
 
     TEST_ASSERT_EQUAL(true, success);
-    TEST_ASSERT_EQUAL(0b0000101111111111, sample.data);
+    TEST_ASSERT_EQUAL(0b0000101111111111, sample.raw12Bit);
     TEST_ASSERT_EQUAL(0b0000000011111101, controlRegisterOnAd7887);
 }
 int tests()
