@@ -8,7 +8,7 @@ uint8_t registerConstantsToUnderlyingType(RegisterConstants c) { return static_c
 
 size_t RegisterAddressIndex::operator++()
 {
-    auto tmp{ address };
+    auto tmp{address};
     ++address;
     if(address > registerAddressToUnderlyingType(RegisterAddress::LastValidAddress)) address = 0;
     return tmp;

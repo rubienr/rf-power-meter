@@ -3,8 +3,8 @@
 
 static void onRisingSignalA()
 {
-    const bool signalA{ 0 != digitalRead(ENCODER_SIGNAL_A_PIN) };
-    const bool signalB{ 0 != digitalRead(ENCODER_SIGNAL_B_PIN) };
+    const bool signalA{0 != digitalRead(ENCODER_SIGNAL_A_PIN)};
+    const bool signalB{0 != digitalRead(ENCODER_SIGNAL_B_PIN)};
 
     if(signalA)
     {

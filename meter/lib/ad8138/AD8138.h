@@ -42,13 +42,13 @@ struct AD8138Converter3rdOrder
 protected:
     /// @{
     /// 3rd-order correction values.
-    float k0{ 0 };
-    float k1{ 0 };
-    float k2{ 0 };
-    float k3{ 0 };
+    float k0{0};
+    float k1{0};
+    float k2{0};
+    float k3{0};
     /// @}
 
-    int8_t attenuationDb{ 0 };
+    int8_t attenuationDb{0};
 };
 
 } // namespace ad8138

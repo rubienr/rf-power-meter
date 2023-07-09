@@ -30,23 +30,23 @@ uint8_t registerConstantsToUnderlyingType(RegisterConstants c);
 
 struct AsBytes2
 {
-    uint8_t lowByte{ 0 };
-    uint8_t highByte{ 0 };
+    uint8_t lowByte{0};
+    uint8_t highByte{0};
 } __attribute__((__packed__));
 
 struct AsBytes4
 {
-    uint8_t lowByte{ 0 };
-    uint8_t highByte{ 0 };
-    uint8_t xLowByte{ 0 };
-    uint8_t xHighByte{ 0 };
+    uint8_t lowByte{0};
+    uint8_t highByte{0};
+    uint8_t xLowByte{0};
+    uint8_t xHighByte{0};
 } __attribute__((__packed__));
 
 union Data
 {
     uint8_t asUint8;
     int8_t asInt8;
-    uint16_t asUint16{ 0 };
+    uint16_t asUint16{0};
     int16_t asInt16;
     float asFloat;
     AsBytes4 asBytes;
@@ -55,7 +55,7 @@ union Data
 union RegisterWhoAmI
 {
     uint8_t asByte;
-    uint8_t asValue{ registerConstantsToUnderlyingType(RegisterConstants::WhoAmI) };
+    uint8_t asValue{registerConstantsToUnderlyingType(RegisterConstants::WhoAmI)};
 } __attribute__((__packed__));
 
 
@@ -79,18 +79,18 @@ union RegisterPowerSampleDbMilliW
 union RegisterTemperatureK
 {
     AsBytes2 asBytes;
-    uint16_t asValue_em2{ 0 };
+    uint16_t asValue_em2{0};
 } __attribute__((__packed__));
 
 union RegisterPowerSampleSeparationMs
 {
-    uint8_t asByte{ 0 };
+    uint8_t asByte{0};
     uint8_t asValue_ep1;
 } __attribute__((__packed__));
 
 union RegisterTemperatureSampleSeparationMs
 {
-    uint8_t asByte{ 0 };
+    uint8_t asByte{0};
     uint8_t asValue_ep1;
 } __attribute__((__packed__));
 
@@ -116,7 +116,7 @@ struct RegisterAddressIndex
     UnderlyingType operator*() const { return address; }
 
 private:
-    UnderlyingType address{ 0 };
+    UnderlyingType address{0};
 };
 
 struct Registers

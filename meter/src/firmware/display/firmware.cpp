@@ -118,7 +118,7 @@ void Firmware::doRender()
 
 bool Firmware::toggleActivityLed()
 {
-    static bool isOn{ false };
+    static bool isOn{false};
     isOn = !isOn;
     digitalWrite(LED_BUILTIN, isOn);
     return isOn;
@@ -137,8 +137,8 @@ bool Firmware::initI2cDataSource()
 
 void Firmware::onReadFromSinkEvent()
 {
-    const auto address{ *sink.address };
-    const auto value{ sink.memory.asBytes[*sink.address] };
+    const auto address{*sink.address};
+    const auto value{sink.memory.asBytes[*sink.address]};
     Serial.print("#I on request from addr=");
     Serial.print(static_cast<int16_t>(address));
     Serial.print(" value=");

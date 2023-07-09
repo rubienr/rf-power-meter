@@ -31,7 +31,7 @@ int8_t AD8138Converter3rdOrder::getAttenuationDb() const { return attenuationDb;
 
 void AD8138Converter3rdOrder::convertDbMilliWatt(uint16_t rawValue, float &correctedDbmW) const
 {
-    const uint16_t v{ rawValue };
+    const uint16_t v{rawValue};
     correctedDbmW = k0 + (k1 * v) + (k2 * v * v) + (k3 * v * v * v);
 }
 

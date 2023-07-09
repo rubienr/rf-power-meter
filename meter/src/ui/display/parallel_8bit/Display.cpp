@@ -5,7 +5,7 @@
 bool displayInit(display_t &display)
 {
     Serial.print("#I display setup:");
-    const uint16_t reportedId{ display.readID() };
+    const uint16_t reportedId{display.readID()};
     if(reportedId != 0)
     {
         Serial.print(" TFT-identifier=");

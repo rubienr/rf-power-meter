@@ -12,9 +12,9 @@ struct Version
     Version &operator=(const Version &) = default;
     bool operator==(const Version &other) const;
 
-    uint8_t major{ VERSION_MAJOR };
-    uint8_t minor{ VERSION_MINOR };
-    uint8_t patch{ VERSION_PATCH };
+    uint8_t major{VERSION_MAJOR};
+    uint8_t minor{VERSION_MINOR};
+    uint8_t patch{VERSION_PATCH};
 
 } __attribute__((__packed__));
 
@@ -24,9 +24,9 @@ struct DeviceInfo
     bool operator==(const DeviceInfo &other) const;
 
     Version version;
-    uint32_t configWrites{ 0 };
+    uint32_t configWrites{0};
     #if defined(AUTO_POWER_OFF_FEATURE)
-    uint16_t autoPowerOffSeconds{ AUTO_POWER_OFF_SEC };
+    uint16_t autoPowerOffSeconds{AUTO_POWER_OFF_SEC};
     #endif
 } __attribute__((__packed__));
 
@@ -86,7 +86,7 @@ struct Settings
     #if defined(AD8318_TEMPERATURE_FEATURE)
     Temperature temperature;
     #endif
-    uint32_t crc{ 0 }; // CRC must be last field
+    uint32_t crc{0}; // CRC must be last field
 
 } __attribute__((__packed__));
 

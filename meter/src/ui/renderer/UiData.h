@@ -18,21 +18,21 @@ enum class CurrentUiContext : uint8_t
 
 struct UiData
 {
-    CurrentUiContext uiContext{ CurrentUiContext::Default };
+    CurrentUiContext uiContext{CurrentUiContext::Default};
     struct
     {
-        uint16_t rawSample{ 0 };
-        float dbMilliW{ 0 };
-        float watt{ 0 };
-        UnitType wattScale{ UnitType::TIMES_ONE };
+        uint16_t rawSample{0};
+        float dbMilliW{0};
+        float watt{0};
+        UnitType wattScale{UnitType::TIMES_ONE};
     } probe;
 
     struct
     {
-        uint16_t rawTemp10Bit{ 0 };
-        uint16_t volt_em4{ 0 };
-        uint16_t kelvin_em2{ 0 };
-        int16_t celsius_em2{ 0 };
+        uint16_t rawTemp10Bit{0};
+        uint16_t volt_em4{0};
+        uint16_t kelvin_em2{0};
+        int16_t celsius_em2{0};
     } temperature;
 };
 

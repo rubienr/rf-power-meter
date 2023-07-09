@@ -154,8 +154,8 @@ void Firmware::doSamplePowerMeter()
     uiData.probe.rawSample = probe.sampleRegister.data;
     #endif // HAS_DISPLAY
 #else      // AD7887_SUBSEQUENT_READ_ERRORS
-    bool success{ probe.device.readSample(probe.sampleRegister) };
-    static uint8_t subsequentReadErrors{ 0 };
+    bool success{probe.device.readSample(probe.sampleRegister)};
+    static uint8_t subsequentReadErrors{0};
 
     if(!success)
     {
@@ -175,7 +175,7 @@ void Firmware::doSamplePowerMeter()
 #endif     // AD7887_SUBSEQUENT_READ_ERRORS
 
 #if defined(AD7887_SUBSEQUENT_ZERO_SAMPLES)
-    static uint8_t subsequentZeroSamples{ 0 };
+    static uint8_t subsequentZeroSamples{0};
     if(probe.sampleRegister.data == 0)
     {
         subsequentZeroSamples++;
@@ -219,7 +219,7 @@ void Firmware::doSamplePowerMeter()
     // todo refactoring
     Wire.beginTransmission(DATA_SINK_I2C_ADDRESS);
     Wire.write(registerAddressToUnderlyingType(RegisterAddress::PowerSampleDbmW));
-    Data data{ .asFloat = dbMilliW };
+    Data data{.asFloat = dbMilliW};
     Wire.write(data.asBytes.lowByte);
     Wire.write(data.asBytes.highByte);
     Wire.write(data.asBytes.xLowByte);
@@ -341,7 +341,7 @@ void Firmware::doSampleTemperature()
 
 bool Firmware::toggleActivityLed()
 {
-    static bool isOn{ false };
+    static bool isOn{false};
     isOn = !isOn;
     digitalWrite(LED_BUILTIN, isOn);
     return isOn;
@@ -374,7 +374,7 @@ bool Firmware::initI2cDataSink()
 
 
     Wire.beginTransmission(DATA_SINK_I2C_ADDRESS);
-    size_t writeCount{ Wire.write(registerAddressToUnderlyingType(RegisterAddress::WhoAmI)) };
+    size_t writeCount{Wire.write(registerAddressToUnderlyingType(RegisterAddress::WhoAmI))};
     if(1 != writeCount)
     {
         Serial.println(F("#I data-sink: failed, to write request"));
@@ -445,7 +445,7 @@ bool Firmware::initI2cDataSink()
 
     Wire.beginTransmission(DATA_SINK_I2C_ADDRESS);
     Wire.write(registerAddressToUnderlyingType(RegisterAddress::PowerControl));
-    RegisterPowerControl ctl{ .asValue = { .reboot = 0, .initDisplay = 1, .reserved = 0 } };
+    RegisterPowerControl ctl{.asValue = {.reboot = 0, .initDisplay = 1, .reserved = 0}};
     Wire.write(ctl.asByte);
     Wire.endTransmission(true);
 
@@ -466,7 +466,7 @@ bool Firmware::initPowerMeterProbe()
     analogReference(AD8318_TEMPERATURE_REF_CONFIG);
 #endif // AD8318_TEMPERATURE_FEATURE
     KValuesLoader::load(&kValuesSets[0][0], probe.kValues);
-    char b[16]{ 0 };
+    char b[16]{0};
     double d;
     Serial.print(F(R"({ "kValues" : { "k0" : ")"));
     d = probe.kValues.k0;

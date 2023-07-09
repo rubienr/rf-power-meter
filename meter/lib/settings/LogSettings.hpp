@@ -126,7 +126,7 @@ template <const char *indent> struct _LogSettings
     Stream &out;
 };
 
-const char _indent2[]{ "  " };
+const char _indent2[]{"  "};
 using LogSettings = _LogSettings<_indent2>;
 
 } // namespace settings

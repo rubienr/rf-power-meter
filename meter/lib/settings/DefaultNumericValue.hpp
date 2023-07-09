@@ -19,7 +19,7 @@ public:
     void reset() { value = defaultValue; };
 
 protected:
-    T value{ defaultValue };
+    T value{defaultValue};
 
 } __attribute__((__packed__));
 

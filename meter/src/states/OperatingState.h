@@ -45,6 +45,6 @@ struct OperatingState
     const EmergencyType &getEmergency() { return emergency; }
 
 protected:
-    EmergencyType emergency{ EmergencyType::None };
-    OperatingModeType mode{ OperatingModeType::Default };
+    EmergencyType emergency{EmergencyType::None};
+    OperatingModeType mode{OperatingModeType::Default};
 };
