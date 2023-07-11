@@ -9,6 +9,9 @@ namespace avg
 #include <stdio.h>
 template <uint8_t entries_count, typename entry_t, typename sum_t, entry_t entry_t_min, entry_t entry_t_max> struct AverageT
 {
+    static_assert(0 < entries_count);
+    static_assert(entry_t_min < entry_t_max);
+
     using entry_type = entry_t;
     using avg_type = sum_t;
 
@@ -49,11 +52,35 @@ template <uint8_t entries_count, typename entry_t, typename sum_t, entry_t entry
         memset(values, 0, sizeof(values));
     }
 
-    void setMaxCapacity(uint8_t valuesCount = entries_count - 1)
+    void increaseCapacity(uint8_t delta)
     {
         clear();
-        maxValuesCount = valuesCount % (entries_count + 1);
+        maxValuesCount += delta;
+        if (maxValuesCount > entries_count)
+            maxValuesCount = (maxValuesCount % entries_count) + 1;
     }
+
+    void decreaseCapacity(uint8_t delta)
+    {
+        if(delta > entries_count) return;
+
+        clear();
+        if(delta >= maxValuesCount) maxValuesCount = entries_count - (delta - maxValuesCount);
+        else maxValuesCount -= delta;
+    }
+
+    void setCapacity(uint8_t valuesCount = entries_count)
+    {
+        clear();
+        if(0 == valuesCount) maxValuesCount = 1u;
+        else if(entries_count < valuesCount) maxValuesCount = entries_count;
+        else maxValuesCount = valuesCount;
+    }
+
+    uint8_t getCapacity() { return maxValuesCount; }
+
+    uint8_t getMaxCapacity() { return entries_count; }
+
 
 private:
     sum_t totalSum{0};

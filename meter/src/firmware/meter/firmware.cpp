@@ -1,7 +1,8 @@
 #include "firmware.h"
 #include "../lib/settings/LogSettings.hpp"
 #if defined(HAS_DATA_SINK_I2C)
-    #include "data_sink/DataSinkRegisters.h"
+    #include "../lib/data_sink/DataSinkRegisters.h"
+    #include "i2c/master_transaction.h"
     #include <Wire.h>
     #include <math.h>
 #endif // HAS_DATA_SINK_I2C
@@ -11,8 +12,6 @@ using namespace datasink;
 #endif // HAS_DATA_SINK_I2C
 
 using KValuesLoader = KValues3rdOrderLoader<float>;
-
-void (*reboot)(void) = 0;
 
 void Firmware::setup()
 {
@@ -148,13 +147,24 @@ void Firmware::process()
 
 void Firmware::doSamplePowerMeter()
 {
+#if defined(HAS_ENCODER)
+    if(encoderHandle.isPbPressed)
+    {
+        probe.sampleAverage.setCapacity(1);
+        encoderHandle.isPbPressed = false;
+    }
+    if(encoderHandle.counter != 0)
+    {
+        if(encoderHandle.counter < 0) probe.sampleAverage.decreaseCapacity(abs(encoderHandle.counter));
+        else if(encoderHandle.counter > 0) probe.sampleAverage.increaseCapacity(encoderHandle.counter);
+        encoderHandle.counter = 0;
+    }
+#endif // HAS_ENCODER
+
 #if !defined(AD7887_SUBSEQUENT_READ_ERRORS)
     probe.device.readSample(probe.sampleRegister);
     probe.sampleAverage.put(probe.sampleRegister.raw12Bit);
-    #if defined(HAS_DISPLAY)
-    uiData.probe.rawSample12Bit = probe.sampleRegister.raw12Bit;
-    #endif // HAS_DISPLAY
-#else      // AD7887_SUBSEQUENT_READ_ERRORS
+#else  // AD7887_SUBSEQUENT_READ_ERRORS
     bool success{probe.device.readSample(probe.sampleRegister)};
     static uint8_t subsequentReadErrors{0};
 
@@ -173,7 +183,7 @@ void Firmware::doSamplePowerMeter()
         Serial.println(F(")"));
     }
     else { subsequentReadErrors = 0; }
-#endif     // AD7887_SUBSEQUENT_READ_ERRORS
+#endif // AD7887_SUBSEQUENT_READ_ERRORS
 
 #if defined(AD7887_SUBSEQUENT_ZERO_SAMPLES)
     static uint8_t subsequentZeroSamples{0};
@@ -192,58 +202,61 @@ void Firmware::doSamplePowerMeter()
     }
     else { subsequentZeroSamples = 0; }
 #endif // AD7887_SUBSEQUENT_ZERO_SAMPLES
+    avg::Average32x16::entry_type avgRaw;
     float dbMilliW;
     float watt;
     UnitType wattScale;
-    probe.converter.convertDbMilliWatt(probe.sampleRegister.raw12Bit, dbMilliW);
+    probe.sampleAverage.get(avgRaw);
+    probe.converter.convertDbMilliWatt(avgRaw, dbMilliW);
     probe.converter.convertWatt(dbMilliW, watt, wattScale);
 
 #if defined(HAS_DISPLAY)
-    uiData.probe.rawSample12Bit = probe.sampleRegister.raw12Bit;
-    probe.sampleAverage.get(uiData.probe.rawAverage12Bit);
-    uiData.probe.dbMilliW = dbMilliW;
-    uiData.probe.watt = watt;
-    uiData.probe.wattScale = wattScale;
+    uiData.power.dbMilliW = dbMilliW;
+    uiData.power.watt_em4 = static_cast<uint8_t>(roundf(static_cast<float>(watt) * 1000.0f));
+    uiData.power.wattScale = wattScale;
 #endif // HAS_DISPLAY
 
     Serial.print(F(R"({ "sample" : { "raw" : ")"));
     Serial.print(probe.sampleRegister.raw12Bit);
     Serial.print(F(R"(", "raw~" : ")"));
-    avg::Average32x16::entry_type avg;
-    probe.sampleAverage.get(avg);
-    Serial.print(avg);
+    Serial.print(avgRaw);
     Serial.print(F(R"(", "dBmW" : ")"));
     Serial.print(dbMilliW);
     Serial.print(F(R"(", "W" : { "w" : ")"));
     Serial.print(watt);
     Serial.print(F(R"(", "siUnit" : ")"));
-    Serial.print(si::unitTypeToStr(wattScale));
-
+    Serial.print(si::unitTypeToChar(wattScale));
     Serial.println(F("\" } } }"));
-
-#if defined(HAS_DATA_SINK_I2C)
-    // todo refactoring
-    Wire.beginTransmission(DATA_SINK_I2C_ADDRESS);
-    Wire.write(registerAddressToUnderlyingType(RegisterAddress::PowerSampleDbmW));
-    Data data{.asFloat = dbMilliW};
-    Wire.write(data.asBytes.lowByte);
-    Wire.write(data.asBytes.highByte);
-    Wire.write(data.asBytes.xLowByte);
-    Wire.write(data.asBytes.xHighByte);
-    Wire.endTransmission(true);
-
-    Wire.beginTransmission(DATA_SINK_I2C_ADDRESS);
-    Wire.write(registerAddressToUnderlyingType(RegisterAddress::TemperatureK));
-    data.asUint16 = probe.temperature.kelvin_em2;
-    Wire.write(data.asBytes.lowByte);
-    Wire.write(data.asBytes.highByte);
-    Wire.endTransmission(true);
-#endif // HAS_DATA_SINK_I2C
     timers.sampleMs = 0;
 }
 
 #if defined(HAS_DATA_SINK_I2C)
-void Firmware::doSendCapturedData() {}
+void Firmware::doSendCapturedData()
+{
+    avg::Average32x16::entry_type avgRaw;
+    float dbMilliW;
+    float watt;
+    UnitType wattScale;
+    probe.sampleAverage.get(avgRaw);
+    probe.converter.convertDbMilliWatt(avgRaw, dbMilliW);
+    probe.converter.convertWatt(dbMilliW, watt, wattScale);
+
+
+    RegisterPowerSampleDbMilliW powerDbMw{.asValue = dbMilliW};
+    i2c::i2cMaster_write(DATA_SINK_I2C_ADDRESS, registerAddressToUnderlyingType(RegisterAddress::PowerSampleDbMilliW), &powerDbMw,
+                         sizeof(powerDbMw));
+
+    RegisterPowerSampleW powerWatt{.asValue_em4 = static_cast<uint16_t>(roundf(watt * 10.0f))};
+    i2c::i2cMaster_write(DATA_SINK_I2C_ADDRESS, registerAddressToUnderlyingType(RegisterAddress::PowerSampleW), &powerWatt, sizeof(powerWatt));
+
+    RegisterSampleConfig sampleCfg{
+    .asValue = {.averageSamplesCount_1_to_32 = probe.sampleAverage.getCapacity(), .dbMwUnitType = unitTypeToUnderlyingType(wattScale)}};
+    i2c::i2cMaster_write(DATA_SINK_I2C_ADDRESS, registerAddressToUnderlyingType(RegisterAddress::SampleConfig), &sampleCfg, sizeof(sampleCfg));
+
+    RegisterTemperatureK tempKelvin{.asValue_em2 = probe.temperature.kelvin_em2};
+    i2c::i2cMaster_write(DATA_SINK_I2C_ADDRESS, registerAddressToUnderlyingType(RegisterAddress::TemperatureK), &tempKelvin,
+                         sizeof(tempKelvin));
+}
 #endif // HAS_DATA_SINK_I2C
 
 void Firmware::doRender()
@@ -271,8 +284,6 @@ void Firmware::doSampleTemperature()
     probe.temperature.celsius_em2 = static_cast<int16_t>(probe.temperature.kelvin_em2) - 27315;
 
     #if defined(HAS_DISPLAY)
-    uiData.temperature.rawTemp10Bit = probe.temperature.rawSample10Bit;
-    uiData.temperature.volt_em4 = probe.temperature.volt_em4;
     uiData.temperature.kelvin_em2 = probe.temperature.kelvin_em2;
     uiData.temperature.celsius_em2 = probe.temperature.celsius_em2;
     #endif // HAS_DISPLAY
@@ -374,86 +385,51 @@ void Firmware::resetAutoPowerOffTimeout() { timers.autoPowerOffSec = 0; }
 #if defined(HAS_DATA_SINK_I2C)
 bool Firmware::initI2cDataSink()
 {
-    uint8_t err;
     Wire.begin();
-    Wire.setClock(100000);
+    Wire.setClock(DATA_SINK_I2C_SPEED);
 
-
-    Wire.beginTransmission(DATA_SINK_I2C_ADDRESS);
-    size_t writeCount{Wire.write(registerAddressToUnderlyingType(RegisterAddress::WhoAmI))};
-    if(1 != writeCount)
+    if(i2c::i2cMaster_ping(DATA_SINK_I2C_ADDRESS))
     {
-        Serial.println(F("#I data-sink: failed, to write request"));
+        Serial.print(F("#E data-sink: failed to pint display address="));
+        Serial.println(DATA_SINK_I2C_ADDRESS);
         operatingState.setEmergency(EmergencyType::HaltOnDataSinkInitError);
         return false;
     }
 
-    err = Wire.endTransmission(true);
+    RegisterWhoAmI current_id;
+    int err = i2c::i2cMaster_read(DATA_SINK_I2C_ADDRESS, registerAddressToUnderlyingType(RegisterAddress::WhoAmI), &current_id,
+                                  sizeof(current_id));
     if(err)
-    {
-        Serial.print(F("#I data-sink: transmission failed, errno="));
-        Serial.print(err);
-        Serial.println(F(" (1: data too long, 2: NACK on addr., 3: NACK on data, 4: other err., 5: timeout)"));
-        operatingState.setEmergency(EmergencyType::HaltOnDataSinkInitError);
-        return false;
-    }
-
-    uint8_t bytes_count = Wire.requestFrom(DATA_SINK_I2C_ADDRESS, sizeof(RegisterWhoAmI));
-    if(0 < bytes_count)
-    {
-        Serial.print(F("#I data-sink: detected I2C device at address="));
-        Serial.println(DATA_SINK_I2C_ADDRESS);
-    }
-    else
-    {
-        Serial.print(F("#E data-sink: no I2C response from device at address="));
-        Serial.println(DATA_SINK_I2C_ADDRESS);
-        operatingState.setEmergency(EmergencyType::HaltOnDataSinkInitError);
-        return false;
-    }
-
-    if(!Wire.available())
     {
         Serial.print(F("#E data-sink: failed to read 'Who Am I'-register from address="));
         Serial.println(DATA_SINK_I2C_ADDRESS);
         operatingState.setEmergency(EmergencyType::HaltOnDataSinkInitError);
         return false;
     }
-    else
+    const uint8_t expected_id = registerConstantsToUnderlyingType(RegisterConstants::WhoAmI);
+    if(current_id.asValue != expected_id)
     {
-        const uint8_t current_id = Wire.read();
-        const uint8_t expected_id = registerConstantsToUnderlyingType(RegisterConstants::WhoAmI);
-        if(current_id != expected_id)
-        {
-            Serial.print(F("#E data-sink: received 'Who Am I'-register device_id="));
-            Serial.print(current_id);
-            Serial.print(F(" but expected device_id="));
-            Serial.println(expected_id);
-            operatingState.setEmergency(EmergencyType::HaltOnDataSinkInitError);
-            return false;
-        }
-        else
-        {
-            Serial.print(F("#I data-sink: detected I2C device_id="));
-            Serial.println(current_id);
-        }
-
-        if(Wire.available())
-        {
-            Serial.print("#W data-sink: truncate unexpected bytes: ");
-            while(Wire.available())
-            {
-                Serial.println(Wire.read());
-            }
-            Serial.println();
-        }
+        Serial.print(F("#E data-sink: received 'Who Am I'-register device_id="));
+        Serial.print(current_id.asValue);
+        Serial.print(F(" but expected device_id="));
+        Serial.println(registerConstantsToUnderlyingType(RegisterConstants::WhoAmI));
+        operatingState.setEmergency(EmergencyType::HaltOnDataSinkInitError);
+        return false;
     }
 
-    Wire.beginTransmission(DATA_SINK_I2C_ADDRESS);
-    Wire.write(registerAddressToUnderlyingType(RegisterAddress::PowerControl));
-    RegisterPowerControl ctl{.asValue = {.reboot = 0, .initDisplay = 1, .reserved = 0}};
-    Wire.write(ctl.asByte);
-    Wire.endTransmission(true);
+    Serial.print(F("#I data-sink: detected at I2C address="));
+    Serial.println(HAS_DATA_SINK_I2C);
+    Serial.print(F(" id="));
+    Serial.println(current_id.asValue);
+
+    RegisterPowerControl ctl{.asValue = {.reboot = 0, .initDisplay = 1, ._reserved = 0}};
+    if(i2c::i2cMaster_write(DATA_SINK_I2C_ADDRESS, registerAddressToUnderlyingType(RegisterAddress::PowerControl), &ctl, sizeof(ctl)))
+    {
+        Serial.print(F("#E data-sink: failed to request 'init display' from device="));
+        Serial.println(DATA_SINK_I2C_ADDRESS);
+        operatingState.setEmergency(EmergencyType::HaltOnDataSinkInitError);
+        return false;
+    }
 
     return true;
 }

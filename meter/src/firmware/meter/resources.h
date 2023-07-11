@@ -35,6 +35,8 @@ extern PbEncoder_Handle *pbEncoderHandle;
 
 struct Resources
 {
+    void (*reboot)(){nullptr};
+
     OperatingState operatingState{};
 
     struct
@@ -44,9 +46,7 @@ struct Resources
     } settings{};
 
 #if defined(HAS_DISPLAY)
-    UiData uiData{.uiContext = CurrentUiContext::Default,
-                  .probe = {.rawSample12Bit = 0, .rawAverage12Bit = 0, .dbMilliW = 0, .watt = 0, .wattScale = UnitType::FEMTO},
-                  .temperature = {0, 0, 0}};
+    UiData uiData{};
 #endif // HAS_DISPLAY
 
 #if defined(HAS_DISPLAY)

@@ -1,5 +1,5 @@
 #include "firmware.h"
-#include "data_sink/DataSinkRegisters.h"
+#include "../lib/data_sink/DataSinkRegisters.h"
 #include <Wire.h>
 
 using namespace datasink;
@@ -8,8 +8,6 @@ extern Firmware f;
 
 void onDataSinkReceiveEvent(int count) { f.onWriteToSinkEvent(count); }
 void onDataSinkRequestEvent() { f.onReadFromSinkEvent(); }
-
-void (*reboot)(void) = 0;
 
 void Firmware::setup()
 {
@@ -76,20 +74,38 @@ void Firmware::doRender()
 #if defined(ACTIVITY_LED)
     toggleActivityLed();
 #endif // ACTIVITY_LED
-    cli();
-    uiData.probe.dbMilliW = sink.memory.asRegisters.powerSampleDbMilliW.asValue;
-    uiData.temperature.kelvin_em2 = sink.memory.asRegisters.temperatureK.asValue_em2;
-    sei();
-    uiData.temperature.celsius_em2 = static_cast<int16_t>(uiData.temperature.kelvin_em2) - 27315;
-    cli();
-    if(sink.memory.asRegisters.powerControl.asValue.initDisplay)
+    if(sink.dataUpdated)
     {
-        sink.memory.asRegisters.powerControl.asValue.initDisplay = 0;
-        Serial.println("#I master requested 'init display'");
-        renderer.init();
+        sink.dataUpdated = false;
+        RegisterPowerControl pctl{sink.data.memory.asRegisters.powerControl};
+        sink.data.memory.asRegisters.powerControl.asValue.initDisplay = 0;
+
+        cli();
+        uiData.power.dbMilliW = sink.data.memory.asRegisters.powerSampleDbMilliW.asValue;
+        uiData.power.watt_em4 = sink.data.memory.asRegisters.powerSampleW.asValue_em4;
+        uiData.power.wattScale = unitTypeFromUnderlyingType(sink.data.memory.asRegisters.sampleConfig.asValue.dbMwUnitType);
+        uiData.power.averageSamplesCount_1_to_32 = sink.data.memory.asRegisters.sampleConfig.asValue.averageSamplesCount_1_to_32;
+        uiData.power.sampleSeparationMs_ep1 = sink.data.memory.asRegisters.powerSampleSeparationMs.asValue_ep1;
+
+        uiData.temperature.kelvin_em2 = sink.data.memory.asRegisters.temperatureK.asValue_em2;
+        uiData.temperature.sampleSeparationMs_ep1 = sink.data.memory.asRegisters.temperatureSampleSeparationMs.asValue_ep1;
+
+        uiData.ui.page = uiScreenFromUnderlyingType(sink.data.memory.asRegisters.ui.asValue.activePage);
+        uiData.ui.item = sink.data.memory.asRegisters.ui.asValue.activeItem;
+        sei();
+
+        if(pctl.asValue.reboot) reboot();
+        if(pctl.asValue.initDisplay)
+        {
+            sink.data.memory.asRegisters.powerControl.asValue.initDisplay = 0;
+            Serial.println("#I master requested 'init display'");
+            renderer.init();
+        }
+
+
+        uiData.temperature.celsius_em2 = static_cast<int16_t>(uiData.temperature.kelvin_em2) - 27315;
+        renderer.render();
     }
-    sei();
-    renderer.render();
 }
 
 [[noreturn]] void Firmware::doHalt()
@@ -129,7 +145,7 @@ bool Firmware::isRenderTimeout() { return timers.renderMs > RENDER_TIMER_MS_DEFA
 bool Firmware::initI2cDataSource()
 {
     Wire.begin(DATA_SINK_I2C_ADDRESS);
-    Wire.setClock(400000);
+    Wire.setClock(DATA_SINK_I2C_SPEED);
     Wire.onReceive(::onDataSinkReceiveEvent);
     Wire.onRequest(::onDataSinkRequestEvent);
     return true;
@@ -137,14 +153,14 @@ bool Firmware::initI2cDataSource()
 
 void Firmware::onReadFromSinkEvent()
 {
-    const auto address{*sink.address};
-    const auto value{sink.memory.asBytes[*sink.address]};
+    const auto address{*sink.data.address};
+    const auto value{sink.data.memory.asBytes[*sink.data.address]};
     Serial.print("#I on request from addr=");
     Serial.print(static_cast<int16_t>(address));
     Serial.print(" value=");
     Serial.println(static_cast<int16_t>(value));
     Wire.write(value);
-    ++sink.address;
+    ++sink.data.address;
 }
 
 void Firmware::onWriteToSinkEvent(int count)
@@ -160,7 +176,7 @@ void Firmware::onWriteToSinkEvent(int count)
     }
 
     // 1st write is register pointer
-    sink.address = static_cast<RegisterAddressIndex::UnderlyingType>(Wire.read());
+    sink.data.address = static_cast<RegisterAddressIndex::UnderlyingType>(Wire.read());
     // Serial.print(" addr=");
     // Serial.print(static_cast<int16_t>(*sink.address));
     //  subsequent writes to registers and auto-increments the register pointer
@@ -169,11 +185,12 @@ void Firmware::onWriteToSinkEvent(int count)
         /*Serial.print(" [");
         Serial.print(static_cast<int16_t>(*sink.address));
         Serial.print("]=");*/
-        sink.memory.asBytes[*sink.address] = Wire.read();
+        sink.data.memory.asBytes[*sink.data.address] = Wire.read();
         // Serial.print(static_cast<int16_t>(sink.memory.asBytes[*sink.address]));
-        ++sink.address;
+        ++sink.data.address;
     }
     // Serial.println();
+    sink.dataUpdated = true;
 }
 
 bool Firmware::initDisplay()

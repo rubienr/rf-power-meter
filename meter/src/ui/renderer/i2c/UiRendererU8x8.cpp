@@ -28,6 +28,6 @@ void UiRenderer::render()
 {
     display.setCursor(0, 0);
     display.print(F("V="));
-    display.println(data.probe.dbMilliW);
+    display.println(data.power.dbMilliW);
     display.display();
 }

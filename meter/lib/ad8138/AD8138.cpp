@@ -42,32 +42,32 @@ void AD8138Converter3rdOrder::convertWatt(const float &correctedDbmW, float &wat
     if(milliWatt < 0.000000001f) // femto Watt
     {
         watt = milliWatt * 1e12f;
-        siUnit = UnitType::FEMTO;
+        siUnit = UnitType::Femto;
     }
     else if(milliWatt < 0.000001f) // pico Watt
     {
         watt = milliWatt * 1e9f;
-        siUnit = UnitType::PICO;
+        siUnit = UnitType::Pico;
     }
     else if(watt < 0.001f) // nano Watt
     {
         watt = milliWatt * 1e6f;
-        siUnit = UnitType::NANO;
+        siUnit = UnitType::Nano;
     }
     else if(watt < 1.0f) // micro Watt
     {
         watt = milliWatt * 1e3f;
-        siUnit = UnitType::MICRO;
+        siUnit = UnitType::Micro;
     }
     else if(milliWatt < 1000.0f) // milli Watt
     {
         // milliWatt *= 10e0f;
-        siUnit = UnitType::MILLI;
+        siUnit = UnitType::Milli;
     }
     else // Watt
     {
         watt = milliWatt * 10e-3f;
-        siUnit = UnitType::TIMES_ONE;
+        siUnit = UnitType::TimesOne;
     }
 }
 

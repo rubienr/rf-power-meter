@@ -1,6 +1,6 @@
 #pragma once
 
-#include "data_sink/DataSinkRegisters.h"
+#include "../lib/data_sink/DataSinkRegisters.h"
 #include "elapsedMillis.h"
 #include "states/OperatingState.h"
 #include "ui/display/Display.h"
@@ -10,11 +10,11 @@
 
 struct Resources
 {
+    void (*reboot)(){nullptr};
+
     OperatingState operatingState{};
 
-    UiData uiData{.uiContext = CurrentUiContext::Default,
-                  .probe = {.rawSample12Bit = 0, .rawAverage12Bit = 0, .dbMilliW = 0, .watt = 0, .wattScale = UnitType::FEMTO},
-                  .temperature = {0, 0, 0}};
+    UiData uiData{};
 
     display_t display DISPLAY_INITIALIZER_LIST;
     UiRenderer renderer{uiData, operatingState, display, Serial};
@@ -27,5 +27,9 @@ struct Resources
 #endif
     } timers{};
 
-    datasink::DataSink sink;
+    struct
+    {
+        datasink::DataSink data{};
+        bool dataUpdated{false};
+    } sink;
 };

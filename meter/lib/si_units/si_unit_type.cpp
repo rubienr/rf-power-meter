@@ -3,23 +3,23 @@
 namespace si
 {
 
-const char unitTypeToStr(UnitType t)
+char unitTypeToChar(const UnitType t)
 {
     switch(t)
     {
-    case UnitType::KILO:
+    case UnitType::Kilo:
         return 'k';
-    case UnitType::TIMES_ONE:
+    case UnitType::TimesOne:
         return ' ';
-    case UnitType::MILLI:
+    case UnitType::Milli:
         return 'm';
-    case UnitType::MICRO:
+    case UnitType::Micro:
         return 'u';
-    case UnitType::NANO:
+    case UnitType::Nano:
         return 'n';
-    case UnitType::PICO:
+    case UnitType::Pico:
         return 'p';
-    case UnitType::FEMTO:
+    case UnitType::Femto:
         return 'f';
     default:
         return '?';

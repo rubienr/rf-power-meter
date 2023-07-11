@@ -106,12 +106,14 @@ else
 
 #if defined(OFFBOARD_DISPLAY) || (defined(POWER_METER) && !defined(DISPLAY_FEATURE))
     #define HAS_DATA_SINK_I2C
+    #define DATA_SINK_I2C_ADDRESS      ((uint8_t)0x18u) // address of data sink/consumer
+    #define DATA_SINK_I2C_SPEED        400000u          // I2C address 100000u or 400000u
+
     #define DATA_SINK_TIMER_MS_DEFAULT 50u
     #define DATA_SINK_TIMER_MS_MAX     1000u
     #define DATA_SINK_TIMER_MS_MIN     30u
 
-    #define DATA_SINK_I2C_ADDRESS      ((uint8_t)0x18u) // address of data consumer
-    #if defined(ARDUINO_AVR_UNO)                        // mcu=atmega328p
+    #if defined(ARDUINO_AVR_UNO) // mcu=atmega328p
         #define DATA_SINK_I2C_SCL PIN_WIRE_SCL
         #define DATA_SINK_I2C_SDA PIN_WIRE_SDA
     #elif defined(ARDUINO_AVR_MEGA2560) // mcu=atmega2560
