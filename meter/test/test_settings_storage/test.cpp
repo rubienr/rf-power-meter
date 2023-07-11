@@ -183,7 +183,7 @@ void test_load_or_init_version_mismatch()
 {
     Settings a;
     a.sample.separation_ms = 123;
-    uint16_t patchVersion{ a.device.version.patch };
+    uint16_t patchVersion{a.device.version.patch};
 
     DummySettingsLoadConstStorageVersionMismatch storage;
     auto result = storage.loadOrInit(a);

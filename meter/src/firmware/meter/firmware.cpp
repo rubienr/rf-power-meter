@@ -249,8 +249,8 @@ void Firmware::doSendCapturedData()
     RegisterPowerSampleW powerWatt{.asValue_em4 = static_cast<uint16_t>(roundf(watt * 10.0f))};
     i2c::i2cMaster_write(DATA_SINK_I2C_ADDRESS, registerAddressToUnderlyingType(RegisterAddress::PowerSampleW), &powerWatt, sizeof(powerWatt));
 
-    RegisterSampleConfig sampleCfg{
-    .asValue = {.averageSamplesCount_1_to_32 = probe.sampleAverage.getCapacity(), .dbMwUnitType = unitTypeToUnderlyingType(wattScale)}};
+    RegisterSampleConfig sampleCfg{.asValue = {.averageSamplesCount_1_to_32 = probe.sampleAverage.getCapacity(),
+                                               .dbMwUnitType = unitTypeToUnderlyingType(wattScale)}};
     i2c::i2cMaster_write(DATA_SINK_I2C_ADDRESS, registerAddressToUnderlyingType(RegisterAddress::SampleConfig), &sampleCfg, sizeof(sampleCfg));
 
     RegisterTemperatureK tempKelvin{.asValue_em2 = probe.temperature.kelvin_em2};

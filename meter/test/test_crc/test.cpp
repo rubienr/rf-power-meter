@@ -11,8 +11,8 @@ using namespace settings;
 
 void test_crc_from_string()
 {
-    const uint8_t d0[]{ "asdf<crc123>" };
-    const uint8_t d1[]{ "asdf<crc100>" };
+    const uint8_t d0[]{"asdf<crc123>"};
+    const uint8_t d1[]{"asdf<crc100>"};
     TEST_ASSERT_EQUAL(Crc_compute(d0, sizeof(d0) - 1 - strlen("<crc123>")), Crc_compute(d1, sizeof(d1) - 1 - strlen("<crc100>")));
 }
 

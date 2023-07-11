@@ -5,7 +5,7 @@
 int main(int argc, char **argv) { return tests(); }
 
 #else
-#include <Arduino.h>
+    #include <Arduino.h>
 void setup() { delay(1000); }
 
 void loop()

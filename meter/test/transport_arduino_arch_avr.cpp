@@ -1,5 +1,5 @@
 #if defined(ARDUINO_ARCH_AVR)
-#include <Arduino.h>
+    #include <Arduino.h>
 
 extern "C" void unittest_uart_begin() { Serial.begin(115200, SERIAL_8N1); }
 extern "C" void unittest_uart_putchar(char c) { Serial.write(c); }

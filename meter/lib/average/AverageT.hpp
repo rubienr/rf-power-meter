@@ -56,8 +56,7 @@ template <uint8_t entries_count, typename entry_t, typename sum_t, entry_t entry
     {
         clear();
         maxValuesCount += delta;
-        if (maxValuesCount > entries_count)
-            maxValuesCount = (maxValuesCount % entries_count) + 1;
+        if(maxValuesCount > entries_count) maxValuesCount = (maxValuesCount % entries_count) + 1;
     }
 
     void decreaseCapacity(uint8_t delta)
